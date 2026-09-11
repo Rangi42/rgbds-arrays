@@ -1,0 +1,463 @@
+; SPDX-License-Identifier: MIT
+
+INCLUDE "arrays.inc"
+
+; check_arrays_inc_min_version <major>[.<minor>]
+; Check whether this library version meets a minimum required one.
+check_arrays_inc_min_version 1
+check_arrays_inc_min_version 1.0
+
+; use_array_base <base>
+; Set the base index for subsequent arrays.
+; Typically 0 or 1, but higher non-negative bases are also technically valid.
+use_array_base 0
+
+; use_constant_arrays
+; Set subsequent arrays to have constant items (immutable, `equ`).
+use_constant_arrays
+
+; use_variable_arrays
+; Set subsequent arrays to have variable items (mutable, `=`).
+;use_variable_arrays
+
+; def_array <name>, <...values>
+; Defines a new array, initializing it with zero or more values.
+; Redefines `def_array_item <...values>` to append values to this array.
+
+; array_assert_equal <name>, <...values>
+; Checks whether an array's contents have exactly the specified values.
+
+def_array empty
+array_assert_equal empty
+assert empty#len == 0
+
+def_array primes, 2, 3, 5, 7, 11, 13, 17, 19
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19
+assert primes#len == 8
+assert primes$0 == 2
+assert primes$7 == 19
+
+def_array odds
+def_array_item 1
+def_array_item 3
+def_array_item 5
+def_array_item 7
+def_array_item 9
+array_assert_equal odds, 1, 3, 5, 7, 9
+assert odds#len == 5
+assert odds$0 == 1
+assert odds$4 == 9
+
+; def_array_fill <name>, <length> [, <value> = 0]
+; Defines a new array, initializing it to be filled with N of the same value,
+; or with N zeros if the value is unspecified.
+; Redefines `def_array_item <...values>` to append values to this array.
+
+def_array_fill zeros, 4
+array_assert_equal zeros, 0, 0, 0, 0
+
+def_array_fill fives, 10, 5
+array_assert_equal fives, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
+
+; def_array_range <name> [, <start> = 0], <stop> [, <step> = 1]
+; Defines a new array, initializing it to be an arithmetic sequence.
+; - `def_array_range <name>, <stop>`
+;   gives the half-open interval [0, <stop>).
+; - `def_array_range <name>, <start>, <stop>`
+;   gives the half-open interval [<start>, <stop>).
+; - `def_array_range <name>, <start>, <stop>, <step>`
+;   gives the half-open interval [<start>, <stop>), skipping by <step>.
+; Redefines `def_array_item <...values>` to append values to this array.
+
+def_array_range naturals, 10
+array_assert_equal naturals, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+def_array_range positives, 1, 10
+array_assert_equal positives, 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+def_array_range countdown, 10, -1, -1
+array_assert_equal countdown, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+assert countdown#len == 11
+assert countdown$0 == 10
+assert countdown$A == 0
+
+def_array_range backwards, 1, 5, -1 ; This should print a warning.
+assert backwards#len == 0
+
+; def_array_copy <name>, <other>
+; Defines a new array as a copy of another array.
+; Redefines `def_array_item <...values>` to append values to this array.
+def_array_copy copied, primes
+array_assert_equal copied, 2, 3, 5, 7, 11, 13, 17, 19
+assert copied#len == primes#len
+assert copied$0 == primes$0
+assert copied$5 == primes$5
+
+; array_purge <name>
+; Purges an array and all its items.
+array_purge copied
+assert !def(copied#len)
+assert !def(copied$0)
+assert !def(copied$5)
+
+; array_clear <name>
+; Removes all items from an array, resetting its length to 0.
+array_clear odds
+array_assert_equal odds, ; Empty.
+assert odds#len == 0
+assert !def(odds$0)
+
+; array_pad <name>, <length> [, <value> = 0]
+; Pads the end of an array up to a minimum length with a given value,
+; or with 0 if the value is unspecified.
+array_pad primes, 5
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19 ; Unchanged.
+array_pad primes, 9
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0
+array_pad primes, 12, 257
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257
+
+; array_lpad <name>, <length> [, <value> = 0]
+; Pads the beginning of an array up to a minimum length with a given value,
+; or with 0 if the value is unspecified.
+array_lpad primes, 10
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257 ; Unchanged.
+array_lpad primes, 14
+array_assert_equal primes, 0, 0, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257
+array_lpad primes, 16, 1
+array_assert_equal primes, 1, 1, 0, 0, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257
+
+; array_print <name>
+; Prints the items of an array, comma-separated between brackets.
+print "Countdown: T-minus "
+array_print countdown
+println "... liftoff!"
+
+; array_println <name>
+; Prints the items of an array, comma-separated between brackets,
+; followed by a newline.
+print "Empty: "
+array_println empty
+
+; array_get <result>, <name>, <index>
+; Gets the value of an item in an array.
+array_get prime_11, primes, 11
+assert prime_11 == primes$B
+
+; array_set <name>, <index>, <value>
+; Sets the value of an item in an array.
+array_set primes, 12, 23
+array_set primes, 13, 29
+array_set primes, 14, 31
+array_set primes, 15, 37
+array_assert_equal primes, 1, 1, 0, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+
+; array_delete <name>, <index>
+; Deletes an item from an array.
+array_delete primes, 2
+array_assert_equal primes, 1, 1, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_delete primes, 1
+array_assert_equal primes, 1, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_delete primes, 0
+array_assert_equal primes, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_delete primes, 0
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+
+; array_insert <name>, <index>, <...values>
+; Inserts one or more values into an array at a given position.
+array_insert odds, 0, 3
+array_assert_equal odds, 3
+array_insert odds, 0, 1
+array_assert_equal odds, 1, 3
+array_insert odds, 2, 7
+array_assert_equal odds, 1, 3, 7
+array_insert odds, 2, 5
+array_assert_equal odds, 1, 3, 5, 7
+
+; array_append <name>, <...values>
+; Appends one or more values to the end of an array.
+array_append odds, 9
+array_assert_equal odds, 1, 3, 5, 7, 9
+
+; array_prepend <name>, <...values>
+; Prepends one or more values to the beginning of an array.
+array_prepend odds, -1
+array_assert_equal odds, -1, 1, 3, 5, 7, 9
+
+; array_extend <name>, <...others>
+; Extends an array by concatenating other arrays.
+array_extend primes, empty
+array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
+array_extend primes, zeros
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 0, 0, 0, 0
+assert primes#len == 12 + zeros#len
+assert primes$C == zeros$0
+assert primes$D == zeros$1
+assert primes$E == zeros$2
+assert primes$F == zeros$3
+
+; array_slice <name>, <start index> [, <end pos>]
+; Redefines an array to be a slice of itself starting at an index,
+; and ending before a subsequent position if one is specified.
+array_slice odds, 2
+array_assert_equal odds, 3, 5, 7, 9
+array_slice primes, 0, 12
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+
+; array_contains <result>, <name>, <value>
+; Checks whether a value exists in an array,
+; setting the result to 1 if it does or 0 if it does not.
+array_contains result, empty, 42
+assert result == 0
+array_contains result, primes, 37
+assert result == 1
+array_contains result, primes, 57
+assert result == 0
+
+; array_find <result>, <name>, <value>
+; Find the first index of a value in an array,
+; or base - 1 if the value is not in the array.
+array_find index, empty, 42
+assert index == -1
+array_find index, fives, 5
+assert index == 0
+array_find index, primes, 37
+assert index == 11
+
+; array_rfind <result>, <name>, <value>
+; Find the last index of a value in an array,
+; or base - 1 if the value is not in the array.
+array_rfind index, empty, 42
+assert index == -1
+array_rfind index, fives, 5
+assert index == 9
+array_rfind index, primes, 37
+assert index == 11
+
+; array_count <result>, <name>, <value>
+; Count the occurrences of a value in an array.
+array_count result, empty, 42
+assert result == 0
+array_count result, fives, 5
+assert result == 10
+array_count result, primes, 37
+assert result == 1
+
+; array_replace <name>, <old>, <new> [, <limit>]
+; Replace the first N occurrences of one value in an array with another,
+; or replace all of them if N is unspecified.
+def_array replacing, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+assert replacing#len == 14
+array_replace replacing, 4, 5
+array_assert_equal replacing, 1, 1, 2, 2, 3, 3, 5, 5, 3, 3, 2, 2, 1, 1
+array_replace replacing, 2, 6, 3
+array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1
+array_replace replacing, 9, 1
+array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1 ; Unchanged.
+array_replace empty, 42, 99
+array_assert_equal empty, ; Unchanged.
+
+; array_rreplace <name>, <old>, <new> [, <limit>]
+; Replace the last N occurrences of one value in an array with another,
+; or replace all of them if N is unspecified.
+def_array rreplacing, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+assert rreplacing#len == 14
+array_rreplace rreplacing, 4, 5
+array_assert_equal rreplacing, 1, 1, 2, 2, 3, 3, 5, 5, 3, 3, 2, 2, 1, 1
+array_rreplace rreplacing, 2, 6, 3
+array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1
+array_rreplace rreplacing, 9, 1
+array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1 ; Unchanged.
+array_rreplace empty, 42, 99
+array_assert_equal empty, ; Unchanged.
+
+; array_remove <name>, <value> [, <limit>]
+; Remove the first N occurrences of a value in an array,
+; or remove all of them if N is unspecified.
+def_array removing, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+assert removing#len == 14
+array_remove removing, 4
+array_assert_equal removing, 1, 1, 2, 2, 3, 3, 3, 3, 2, 2, 1, 1
+array_contains result, removing, 4
+assert result == 0
+array_remove removing, 2, 3
+array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1
+array_remove removing, 9
+array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1 ; Unchanged.
+array_remove empty, 42
+array_assert_equal empty, ; Unchanged.
+
+; array_rremove <name>, <value> [, <limit>]
+; Remove the last N occurrences of a value in an array,
+; or remove all of them if N is unspecified.
+def_array rremoving, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+assert rremoving#len == 14
+array_rremove rremoving, 4
+array_assert_equal rremoving, 1, 1, 2, 2, 3, 3, 3, 3, 2, 2, 1, 1
+array_contains result, rremoving, 4
+assert result == 0
+array_rremove rremoving, 2, 3
+array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1
+array_rremove rremoving, 9
+array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1 ; Unchanged.
+array_rremove empty, 42
+array_assert_equal empty, ; Unchanged.
+
+; array_reverse <name>
+; Reverses an array.
+array_reverse primes
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_reverse empty
+array_assert_equal empty, ; Unchanged.
+
+; array_sort <name>
+; Sorts an array in order from least to greatest.
+; Uses an O(n log n) in-place merge sort algorithm.
+array_sort primes
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_sort empty
+array_assert_equal empty, ; Unchanged.
+
+; array_rsort <name>
+; Sorts an array in order from greatest to least.
+; Uses an O(n log n) in-place merge sort algorithm.
+array_rsort primes
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_rsort empty
+array_assert_equal empty, ; Unchanged.
+
+; array_is_sorted <result>, <name>
+; Checks whether an array is sorted from least to greatest,
+; setting the result to 1 if it is or 0 if it is not.
+array_is_sorted result, empty
+assert result == 1
+array_is_sorted result, primes
+assert result == 0
+array_sort primes
+array_is_sorted result, primes
+assert result == 1
+
+; array_is_rsorted <result>, <name>
+; Checks whether an array is sorted from greatest to least,
+; setting the result to 1 if it is or 0 if it is not.
+array_is_rsorted result, empty
+assert result == 1
+array_is_rsorted result, primes
+assert result == 0
+array_rsort primes
+array_is_rsorted result, primes
+assert result == 1
+
+; array_reseed <seed>
+; Reseed the xorshift32 PRNG used in randomized array macros
+; (array_shuffle and array_pick).
+array_reseed $deadbeef
+
+; array_shuffle <name>
+; Randomly shuffle an array
+; Uses the O(n) Fisher-Yates aka Knuth algorithm.
+array_shuffle primes
+array_assert_equal primes, 13, 2, 3, 29, 11, 5, 7, 37, 31, 19, 17, 23
+array_shuffle empty
+array_assert_equal empty, ; Unchanged.
+
+; array_pick <result>, <name>
+; Randomly pick an item from a nonempty array.
+array_pick result, primes
+assert result == primes$8
+def_array single, 23
+array_pick result, single
+assert result == 23
+
+; array_dedup <name>
+; Deduplicates an array by reducing runs of the same value to one item.
+def_array deduplicating, 1, 1, 2, 3, 3, 3, 2, 2, 1, 4, 4, 4, 4, 3, 2, 1, 1
+array_dedup deduplicating
+array_assert_equal deduplicating, 1, 2, 3, 2, 1, 4, 3, 2, 1
+array_dedup single
+array_assert_equal single, 23 ; Unchanged.
+array_dedup empty
+array_assert_equal empty, ; Unchanged.
+
+; array_unique <name>
+; Removes all duplicate items in an array,
+; leaving only one item per unique value.
+array_unique deduplicating
+array_assert_equal deduplicating, 1, 2, 3, 4
+array_unique single
+array_assert_equal single, 23 ; Unchanged.
+array_unique empty
+array_assert_equal empty, ; Unchanged.
+
+; array_are_all_equal <result>, <name>
+; Checks whether all the values in an array are equal,
+; setting the result to 1 if they are or 0 if they are not.
+array_are_all_equal result, fives
+assert result == 1
+array_are_all_equal result, primes
+assert result == 0
+array_are_all_equal result, single
+assert result == 1
+array_are_all_equal result, empty
+assert result == 1
+
+; array_are_all_unique <result>, <name>
+; Checks whether all the values in an array are unique,
+; setting the result to 1 if they are or 0 if they are not.
+array_are_all_unique result, fives
+assert result == 0
+array_are_all_unique result, primes
+assert result == 1
+array_are_all_unique result, single
+assert result == 1
+array_are_all_unique result, empty
+assert result == 1
+
+; array_min <result>, <name>
+; Find the minimum value in a nonempty array.
+array_min result, fives
+assert result == 5
+array_min result, primes
+assert result == 2
+array_min result, single
+assert result == 23
+
+; array_max <result>, <name>
+; Find the maximum value in a nonempty array.
+array_max result, fives
+assert result == 5
+array_max result, primes
+assert result == 37
+array_max result, single
+assert result == 23
+
+; array_sum <result>, <name>
+; Find the sum of values in an array,
+; or 0 if the array is empty.
+array_sum result, fives
+assert result == 50
+array_sum result, primes
+assert result == 197
+array_sum result, single
+assert result == 23
+array_sum result, empty
+assert result == 0
+
+; array_product <result>, <name>
+; Find the product of values in an array,
+; or 1 if the array is empty.
+array_product result, odds
+assert result == 945
+array_product result, single
+assert result == 23
+array_product result, empty
+assert result == 1
+
+; array_mean <result>, <name>
+; Find the mean (average) of values in a nonempty array.
+array_mean result, fives
+assert result == 5
+array_mean result, primes
+assert result == 16
+array_mean result, single
+assert result == 23
