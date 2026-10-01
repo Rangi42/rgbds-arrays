@@ -18,6 +18,13 @@ GBDev's [`hardware.inc`](https://github.com/gbdev/hardware.inc).
 
 ## Macros
 
+If <code><i>arr</i></code> is defined as an array, then its length is <code><i>arr</i>#len</code>,
+and its items are <code><i>arr</i>{<i>idx</i>}</code> for <code><i>idx</i></code> from <code><i>arr</i>#base</code> (0 by default) to <code><i>arr</i>#base + <i>arr</i>#len - 1</code>.
+
+The values <code><i>arr</i>#len</code> and <code><i>arr</i>#base</code> are `equ` constants; so is <code><i>arr</i>#equ</code>, which determines whether `arr`'s items are `equ` constants or `=` variables. If the items are variables, they can be freely reassigned.
+
+You can manually change all of those values, but keep them consistent, or else the array macros may break if they assume preconditions that are now false. For example, if you change the value of <code><i>arr</i>#len</code> or <code><i>arr</i>#base</code>, ensure that items are defined for all the expected indexes from <code><i>arr</i>#base</code> to <code><i>arr</i>#base + <i>arr</i>#len - 1</code>.
+
 ### <code>check_arrays_inc_min_version <i>&lt;major&gt;</i>[.<i>&lt;minor&gt;</i>]</code>
 
 Check whether this library version meets a minimum required one.
