@@ -3,8 +3,8 @@
 if !def(ARRAYS_INC)
 def ARRAYS_INC equ 1
 
-; The current version of this library is 1.0.
-def ARRAYS_VERSION equs "1.0"
+; The current version of this library is 1.1.
+def ARRAYS_VERSION equs "1.1"
 
 ; Check whether this library version meets a minimum required one.
 MACRO? check_arrays_inc_min_version ; <major>[.<minor>]
@@ -24,28 +24,28 @@ ENDM
 ; The base index for arrays.
 ; 0 by default, but 1 would match how RGBASM strings and macro arguments are indexed.
 ; Only modify this using `use_array_base`.
-def __arrays_base = 0
+def _arrays_base = 0
 
 ; Set the base index for subsequent arrays.
 ; Typically 0 or 1, but higher non-negative bases are also technically valid.
 MACRO? use_array_base ; <base>
-	def __arrays_base = \1
-	__check_non_negative_for_array __arrays_base, "Array base", use_array_base
+	def _arrays_base = \1
+	__check_non_negative_for_array _arrays_base, "Array base", use_array_base
 ENDM
 
 ; Whether array items are constants (if 1) or variables (if 0).
 ; Array items are constant by default.
 ; Only modify this using `use_constant_arrays` or `use_variable_arrays`.
-def __arrays_are_constant = 1
+def _arrays_are_constant = 1
 
 ; Set subsequent arrays to have constant items (immutable, `equ`).
 MACRO? use_constant_arrays
-	def __arrays_are_constant = 1
+	def _arrays_are_constant = 1
 ENDM
 
 ; Set subsequent arrays to have variable items (mutable, `=`).
 MACRO? use_variable_arrays
-	def __arrays_are_constant = 0
+	def _arrays_are_constant = 0
 ENDM
 
 ; Causes assembly to fail if the specified value is negative.
@@ -111,9 +111,9 @@ ENDM
 MACRO? __init_array ; <name>, <length>, <macro context>
 	__check_array_undefined \1, \3
 	__check_non_negative_for_array \2, "Length", \3
-	def \1#base equ __arrays_base
+	def \1#base equ _arrays_base
 	def \1#len equ \2
-	if __arrays_are_constant
+	if _arrays_are_constant
 		def \1#equ equs "equ"
 	else
 		def \1#equ equs "="
@@ -218,13 +218,65 @@ ENDM
 MACRO? def_array_copy ; <name>, <other>
 	__check_array_defined \2, def_array_copy
 	__init_array \1, \2#len, def_array_copy
-	def __delta = \1#base - \2#base
 	for? __idx, \2#base, \2#base + \2#len
-		def __new = __idx + __delta
+		def __new = __idx + \1#base - \2#base
 		redef \1{__new} {\1#equ} \2{__idx}
 	endr
-	purge __delta, __idx
+	purge __idx
 	if def (__new)
+		purge __new
+	endc
+ENDM
+
+; Defines a new array as a concatenation of other arrays.
+; Redefines `def_array_item <...values>` to append values to this array.
+MACRO? def_array_concat ; <name>, <...others>
+	def __len = 0
+	for? __arr, 2, _NARG + 1
+		__check_array_defined \<__arr>, def_array_concat
+		def __len += \<__arr>#len
+	endr
+	__init_array \1, __len, def_array_concat
+	def __num = \1#base
+	for? __arr, 2, _NARG + 1
+		for? __idx, \<__arr>#base, \<__arr>#base + \<__arr>#len
+			def __new = __idx + __num - \<__arr>#base
+			redef \1{__new} {\1#equ} \<__arr>{__idx}
+		endr
+		def __num += \<__arr>#len
+	endr
+	purge __len, __arr, __num
+	if def(__idx)
+		purge __idx
+	endc
+	if def(__new)
+		purge __new
+	endc
+ENDM
+
+; Defines a new array as a slice of another array starting at an index,
+; and ending before a subsequent position if one is specified.
+; Redefines `def_array_item <...values>` to append values to this array.
+MACRO? def_array_slice ; <name>, <other>, <start index> [, <end pos>]
+	__check_array_defined \2, def_array_slice
+	def __start = \3
+	__check_array_index \2, __start, def_array_slice
+	if _NARG == 4
+		def __end = \4
+		__check_array_pos \2, __end, def_array_slice
+	else
+		def __end = \2#base + \2#len
+	endc
+	if __start > __end
+		fail "def_array_slice: Invalid slice for array \2: [{d:__start}, {d:__end})"
+	endc
+	__init_array \1, __end - __start, def_array_slice
+	for? __idx, __start, __end
+		def __new = __idx + \2#base - __start
+		redef \1{__new} {\1#equ} \2{__idx}
+	endr
+	purge __start, __end, __idx
+	if def(__new)
 		purge __new
 	endc
 ENDM
@@ -357,7 +409,7 @@ MACRO? array_delete ; <name>, <index>
 	endc
 ENDM
 
-; Inserts one or more values into an array at a given position.
+; Inserts zero or more values into an array at a given position.
 MACRO? array_insert ; <name>, <index>, <...values>
 	__check_array_defined \1, array_insert
 	def __ins = \2
@@ -377,7 +429,7 @@ MACRO? array_insert ; <name>, <index>, <...values>
 	endc
 ENDM
 
-; Appends one or more values to the end of an array.
+; Appends zero or more values to the end of an array.
 MACRO? array_append ; <name>, <...values>
 	__check_array_defined \1, array_append
 	def __start = \1#base + \1#len
@@ -392,22 +444,45 @@ MACRO? array_append ; <name>, <...values>
 	endc
 ENDM
 
-; Prepends one or more values to the beginning of an array.
+; Prepends zero or more values to the beginning of an array.
 MACRO? array_prepend ; <name>, <...values>
 	__check_array_defined \1, array_prepend
-	def __base = \1#base
 	for? __idx, \1#base + \1#len - 1, \1#base - 1, -1
 		def __new = __idx + _NARG - 1
 		redef \1{__new} {\1#equ} \1{__idx}
 	endr
 	for? __argi, 2, _NARG + 1
-		def __new = __base + __argi - 2
+		def __new = \1#base + __argi - 2
 		redef \1{__new} {\1#equ} \<__argi>
 	endr
 	redef \1#len equ \1#len + _NARG - 1
-	purge __base, __idx, __argi
+	purge __idx, __argi
 	if def(__new)
 		purge __new
+	endc
+ENDM
+
+; Pops the value from the end of a nonempty array.
+MACRO? array_pop ; <result>, <name>
+	__check_array_nonempty \2, array_pop
+	def __idx = \2#base + \2#len - 1
+	def \1 = \2{__idx}
+	redef \2#len equ \2#len - 1
+	purge \2{__idx}, __idx
+ENDM
+
+; Shifts the value from the beginning of a nonempty array.
+MACRO? array_shift ; <result>, <name>
+	__check_array_nonempty \2, array_shift
+	def \1 = \2{\2#base}
+	for? __idx, \2#base, \2#base + \2#len - 1
+		def __old = __idx + 1
+		redef \2{__idx} {\2#equ} \2{__old}
+	endr
+	redef \2#len equ \2#len - 1
+	purge \2{__idx}, __idx
+	if def(__old)
+		purge __old
 	endc
 ENDM
 
@@ -416,14 +491,16 @@ MACRO? array_extend ; <name>, <...others>
 	__check_array_defined \1, array_extend
 	for? __arr, 2, _NARG + 1
 		__check_array_defined \<__arr>, array_extend
-		def __delta = \1#base + \1#len - \<__arr>#base
 		for? __idx, \<__arr>#base, \<__arr>#base + \<__arr>#len
-			def __new = __idx + __delta
+			def __new = __idx + \1#base + \1#len - \<__arr>#base
 			redef \1{__new} {\1#equ} \<__arr>{__idx}
 		endr
 		redef \1#len equ \1#len + \<__arr>#len
 	endr
-	purge __arr, __delta, __idx
+	purge __arr
+	if def(__idx)
+		purge __idx
+	endc
 	if def(__new)
 		purge __new
 	endc
@@ -444,16 +521,15 @@ MACRO? array_slice ; <name>, <start index> [, <end pos>]
 	if __start > __end
 		fail "array_slice: Invalid slice for array \1: [{d:__start}, {d:__end})"
 	endc
-	def __delta = \1#base - __start
 	for? __idx, __start, __end
-		def __new = __idx + __delta
+		def __new = __idx + \1#base - __start
 		redef \1{__new} {\1#equ} \1{__idx}
 	endr
-	for? __idx, __end + __delta, \1#base + \1#len
+	for? __idx, __end + \1#base - __start, \1#base + \1#len
 		purge \1{__idx}
 	endr
 	redef \1#len equ __end - __start
-	purge __start, __end, __delta, __idx
+	purge __start, __end, __idx
 	if def(__new)
 		purge __new
 	endc
@@ -635,18 +711,59 @@ ENDM
 ; Reverses an array.
 MACRO? array_reverse ; <name>
 	__check_array_defined \1, array_reverse
-	def __base = \1#base
-	def __last = \1#base + \1#len - 1
 	for? __off, \1#len / 2
-		def __i = __base + __off
-		def __j = __last - __off
+		def __i = \1#base + __off
+		def __j = \1#base + \1#len - __off - 1
 		def __tmp = \1{__i}
 		redef \1{__i} {\1#equ} \1{__j}
 		redef \1{__j} {\1#equ} __tmp
 	endr
-	purge __base, __last, __off
+	purge __off
 	if def(__i)
 		purge __i, __j, __tmp
+	endc
+ENDM
+
+; Reverses a slice of an array.
+; Meant for internal use in `array_rotate`.
+MACRO? _reverse_array_slice ; <name>, <start>, <end>
+	def __start = \2
+	def __end = \3
+	rept? (__end - __start + 1) / 2
+		def __tmp = \1{__start}
+		redef \1{__start} {\1#equ} \1{__end}
+		redef \1{__end} {\1#equ} __tmp
+		def __start += 1
+		def __end -= 1
+	endr
+	purge __start, __end
+	if def(__tmp)
+		purge __tmp
+	endc
+ENDM
+
+; Rotates an array right by a positive amount,
+; or left by a negative amount.
+MACRO? array_rotate ; <name>, <amount>
+	__check_array_defined \1, array_rotate
+	if \1#len > 0
+		def __num = \2
+		if __num > 0
+			def __k = __num % \1#len
+			_reverse_array_slice \1, \1#base, \1#base + \1#len - 1
+			_reverse_array_slice \1, \1#base, \1#base + __k - 1
+			_reverse_array_slice \1, \1#base + __k, \1#base + \1#len - 1
+		elif __num < 0
+			def __num = -__num
+			def __k = __num % \1#len
+			_reverse_array_slice \1, \1#base, \1#base + __k - 1
+			_reverse_array_slice \1, \1#base + __k, \1#base + \1#len - 1
+			_reverse_array_slice \1, \1#base, \1#base + \1#len - 1
+		endc
+		purge __num
+		if def(__k)
+			purge __k
+		endc
 	endc
 ENDM
 
@@ -655,18 +772,16 @@ ENDM
 ; Meant for internal use.
 MACRO? __sort_array ; <name>, <operator>, <macro context>
 	__check_array_defined \1, \3
-	def __base = \1#base
-	def __len = \1#len
-	def __cap = __base + __len
+	def __cap = \1#base + \1#len
 	def __max = 0
 	for? __p, 1, 32
-		if __len >= 1 << __p
+		if \1#len >= 1 << __p
 			def __max += 1
 		endc
 	endr
 	for? __p, __max
 		def __w = 2 ** __p
-		for? __i, __base, __cap, 2 * __w
+		for? __i, \1#base, __cap, 2 * __w
 			if __i + __w >= __cap
 				break
 			endc
@@ -677,7 +792,7 @@ MACRO? __sort_array ; <name>, <operator>, <macro context>
 			if __r2 >= __cap
 				def __r2 = __cap - 1
 			endc
-			for? __t, __len
+			for? __t, \1#len
 				if __l1 > __r1 || __l2 > __r2
 					break
 				endc
@@ -704,7 +819,7 @@ MACRO? __sort_array ; <name>, <operator>, <macro context>
 			endr
 		endr
 	endr
-	purge __base, __len, __cap, __p, __max
+	purge __cap, __p, __max
 	if def(__w)
 		purge __w, __i
 		if def(__l1)
@@ -768,34 +883,33 @@ ENDM
 ; The pseudorandom number generator (PRNG) state
 ; for shuffling and picking from arrays.
 ; Only modify this using `array_reseed`.
-def __array_prng = ((((__UTC_SECOND__ * 60 + __UTC_MINUTE__) * 60 + __UTC_HOUR__) * 24 + \
+def _arrays_prng = ((((__UTC_SECOND__ * 60 + __UTC_MINUTE__) * 60 + __UTC_HOUR__) * 24 + \
                      __UTC_DAY__ - 1) * 31 + __UTC_MONTH__ - 1) * 12 + __UTC_YEAR__ % 100
 
 ; Reseed the xorshift32 PRNG used in randomized array macros
 ; (array_shuffle and array_pick).
 MACRO? array_reseed ; <seed>
-	def __array_prng = \1
+	def _arrays_prng = \1
 ENDM
 
 ; Generate the next PRNG value.
 ; Uses an xorshift32 algorithm.
 ; Meant for internal use.
 MACRO? __next_array_prng
-	def __array_prng ^= __array_prng << 13
-	def __array_prng ^= __array_prng >>> 17
-	def __array_prng ^= __array_prng << 5
+	def _arrays_prng ^= _arrays_prng << 13
+	def _arrays_prng ^= _arrays_prng >>> 17
+	def _arrays_prng ^= _arrays_prng << 5
 ENDM
 
-; Randomly shuffle an array
+; Randomly shuffle an array.
 ; Uses the O(n) Fisher-Yates aka Knuth algorithm.
 MACRO? array_shuffle ; <name>
 	__check_array_defined \1, array_shuffle
-	def __base = \1#base
 	if \1#len > 0
 		for? __i, \1#len - 1, 0, -1
 			__next_array_prng
-			def __j = __base + __array_prng % (__i + 1)
-			def __i += __base
+			def __j = \1#base + _arrays_prng % (__i + 1)
+			def __i += \1#base
 			def __tmp = \1{__i}
 			redef \1{__i} {\1#equ} \1{__j}
 			redef \1{__j} {\1#equ} __tmp
@@ -805,14 +919,13 @@ MACRO? array_shuffle ; <name>
 			purge __j, __tmp
 		endc
 	endc
-	purge __base
 ENDM
 
 ; Randomly pick an item from a nonempty array.
 MACRO? array_pick ; <result>, <name>
 	__check_array_nonempty \2, array_pick
 	__next_array_prng
-	def __idx = \2#base + __array_prng % \2#len
+	def __idx = \2#base + _arrays_prng % \2#len
 	def \1 = \2{__idx}
 	purge __idx
 ENDM
@@ -871,6 +984,9 @@ MACRO? array_unique ; <name>
 		endr
 		redef \1#len equ \1#len - __num
 		purge __num, __idx
+		if def(__dup)
+			purge __dup, __pre
+		endc
 		if def(__new)
 			purge __new
 		endc
@@ -940,6 +1056,34 @@ MACRO? array_max ; <result>, <name>
 	for? __idx, \2#base, \2#base + \2#len
 		if \2{__idx} > \1
 			def \1 = \2{__idx}
+		endc
+	endr
+	if def(__idx)
+		purge __idx
+	endc
+ENDM
+
+; Find the index of a minimum value in a nonempty array.
+MACRO? array_argmin ; <result>, <name>
+	__check_array_nonempty \2, array_argmin
+	def \1 = \2#base
+	for? __idx, \2#base, \2#base + \2#len
+		if \2{__idx} < \2{\1}
+			def \1 = __idx
+		endc
+	endr
+	if def(__idx)
+		purge __idx
+	endc
+ENDM
+
+; Find the index of a maximum value in a nonempty array.
+MACRO? array_argmax ; <result>, <name>
+	__check_array_nonempty \2, array_argmax
+	def \1 = \2#base
+	for? __idx, \2#base, \2#base + \2#len
+		if \2{__idx} > \2{\1}
+			def \1 = __idx
 		endc
 	endr
 	if def(__idx)
