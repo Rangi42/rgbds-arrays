@@ -2,7 +2,7 @@
 
 A [RGBDS](https://rgbds.gbdev.io) macro pack that provides array-like functionality.
 
-The latest version is **1.0**.
+The latest version is **1.1**.
 
 ## Usage
 
@@ -78,6 +78,19 @@ Defines a new array as a copy of another array.
 
 Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to this array.
 
+### <code>def_array_concat <i>&lt;name&gt;</i>, <i>&lt;...others&gt;</i></code>
+
+Defines a new array as a concatenation of other arrays.
+
+Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to this array.
+
+### <code>def_array_slice <i>&lt;name&gt;</i>, <i>&lt;other&gt;</i>, <i>&lt;start index&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
+
+Defines a new array as a slice of another array starting at an index,
+and ending before a subsequent position if one is specified.
+
+Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to this array.
+
 ### <code>array_purge <i>&lt;name&gt;</i></code>
 
 Purges an array and all its items.
@@ -119,15 +132,23 @@ Deletes an item from an array.
 
 ### <code>array_insert <i>&lt;name&gt;</i>, <i>&lt;index&gt;</i>, <i>&lt;...values&gt;</i></code>
 
-Inserts one or more values into an array at a given position.
+Inserts zero or more values into an array at a given position.
 
 ### <code>array_append <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
-Appends one or more values to the end of an array.
+Appends zero or more values to the end of an array.
 
 ### <code>array_prepend <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
-Prepends one or more values to the beginning of an array.
+Prepends zero or more values to the beginning of an array.
+
+### <code>array_pop <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+Pops the value from the end of a nonempty array.
+
+### <code>array_shift <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+Shifts the value from the beginning of a nonempty array.
 
 ### <code>array_extend <i>&lt;name&gt;</i>, <i>&lt;...others&gt;</i></code>
 
@@ -181,6 +202,11 @@ or remove all of them if N is unspecified.
 
 Reverses an array.
 
+### <code>array_rotate <i>&lt;name&gt;</i>, <i>&lt;amount&gt;</i></code>
+
+Rotates an array right by a positive amount,
+or left by a negative amount.
+
 ### <code>array_sort <i>&lt;name&gt;</i></code>
 
 Sorts an array in order from least to greatest.
@@ -208,7 +234,7 @@ Reseed the xorshift32 PRNG used in randomized array macros
 
 ### <code>array_shuffle <i>&lt;name&gt;</i></code>
 
-Randomly shuffle an array
+Randomly shuffle an array.
 Uses the 𝒪(<i>n</i>) Fisher-Yates aka Knuth algorithm.
 
 ### <code>array_pick <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
@@ -241,6 +267,14 @@ Find the minimum value in a nonempty array.
 ### <code>array_max <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
 Find the maximum value in a nonempty array.
+
+### <code>array_argmin <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+Find the index of a minimum value in a nonempty array.
+
+### <code>array_argmax <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+Find the index of a maximum value in a nonempty array.
 
 ### <code>array_sum <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 

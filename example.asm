@@ -5,7 +5,7 @@ INCLUDE "arrays.inc"
 ; check_arrays_inc_min_version <major>[.<minor>]
 ; Check whether this library version meets a minimum required one.
 check_arrays_inc_min_version 1
-check_arrays_inc_min_version 1.0
+check_arrays_inc_min_version 1.1
 
 ; use_array_base <base>
 ; Set the base index for subsequent arrays.
@@ -93,6 +93,27 @@ assert copied#len == primes#len
 assert copied$0 == primes$0
 assert copied$5 == primes$5
 
+; def_array_concat <name>, <...others>
+; Defines a new array as a concatenation of other arrays.
+; Redefines `def_array_item <...values>` to append values to this array.
+def_array_concat concatenated, primes, positives
+array_assert_equal concatenated, 2, 3, 5, 7, 11, 13, 17, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9
+assert concatenated#len == primes#len + positives#len
+def_array_concat concatenated_none,
+array_assert_equal concatenated_none,
+assert concatenated_none#len == 0
+
+; def_array_slice <name>, <other>, <start index> [, <end pos>]
+; Defines a new array as a slice of another array starting at an index,
+; and ending before a subsequent position if one is specified.
+; Redefines `def_array_item <...values>` to append values to this array.
+def_array_slice sliced_primes, primes, 3
+array_assert_equal sliced_primes, 7, 11, 13, 17, 19
+def_array_slice sliced_concatenated, concatenated, 4, 12
+array_assert_equal sliced_concatenated, 11, 13, 17, 19, 1, 2, 3, 4
+def_array_slice sliced_empty, naturals, 9, 9
+array_assert_equal sliced_empty,
+
 ; array_purge <name>
 ; Purges an array and all its items.
 array_purge copied
@@ -164,7 +185,7 @@ array_delete primes, 0
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
 
 ; array_insert <name>, <index>, <...values>
-; Inserts one or more values into an array at a given position.
+; Inserts zero or more values into an array at a given position.
 array_insert odds, 0, 3
 array_assert_equal odds, 3
 array_insert odds, 0, 1
@@ -173,21 +194,50 @@ array_insert odds, 2, 7
 array_assert_equal odds, 1, 3, 7
 array_insert odds, 2, 5
 array_assert_equal odds, 1, 3, 5, 7
+array_insert odds, 2,
+array_assert_equal odds, 1, 3, 5, 7 ; Unchanged.
 
 ; array_append <name>, <...values>
-; Appends one or more values to the end of an array.
+; Appends zero or more values to the end of an array.
 array_append odds, 9
 array_assert_equal odds, 1, 3, 5, 7, 9
+array_append odds,
+array_assert_equal odds, 1, 3, 5, 7, 9 ; Unchanged.
 
 ; array_prepend <name>, <...values>
-; Prepends one or more values to the beginning of an array.
+; Prepends zero or more values to the beginning of an array.
 array_prepend odds, -1
 array_assert_equal odds, -1, 1, 3, 5, 7, 9
+array_prepend odds,
+array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
+
+; array_pop <result>, <name>
+; Pops the value from the end of a nonempty array.
+def_array_range evens, 2, 13, 2
+array_assert_equal evens, 2, 4, 6, 8, 10, 12
+array_pop result, evens
+assert result == 12
+array_assert_equal evens, 2, 4, 6, 8, 10
+array_pop result, evens
+assert result == 10
+array_assert_equal evens, 2, 4, 6, 8
+
+; array_shift <result>, <name>
+; Shifts the value from the beginning of a nonempty array.
+array_assert_equal evens, 2, 4, 6, 8
+array_shift result, evens
+assert result == 2
+array_assert_equal evens, 4, 6, 8
+array_shift result, evens
+assert result == 4
+array_assert_equal evens, 6, 8
 
 ; array_extend <name>, <...others>
 ; Extends an array by concatenating other arrays.
-array_extend primes, empty
+array_extend odds, empty, empty, empty
 array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
+array_extend primes,
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37 ; Unchanged.
 array_extend primes, zeros
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 0, 0, 0, 0
 assert primes#len == 12 + zeros#len
@@ -310,6 +360,33 @@ array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
 array_reverse empty
 array_assert_equal empty, ; Unchanged.
 
+; array_rotate <name>, <amount>
+; Rotates an array right by a positive amount,
+; or left by a negative amount.
+def_array rotating, 1, 2, 3, 4, 5
+array_rotate rotating, 0
+array_assert_equal rotating, 1, 2, 3, 4, 5 ; Unchanged.
+array_rotate rotating, 1
+array_assert_equal rotating, 5, 1, 2, 3, 4
+array_rotate rotating, -1
+array_assert_equal rotating, 1, 2, 3, 4, 5
+array_rotate rotating, 2
+array_assert_equal rotating, 4, 5, 1, 2, 3
+array_rotate rotating, -2
+array_assert_equal rotating, 1, 2, 3, 4, 5
+array_rotate primes, 3
+array_assert_equal primes, 5, 3, 2, 37, 31, 29, 23, 19, 17, 13, 11, 7
+array_rotate primes, -3
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_rotate primes, 4
+array_assert_equal primes, 7, 5, 3, 2, 37, 31, 29, 23, 19, 17, 13, 11
+array_rotate primes, -4
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_rotate empty, 1
+array_assert_equal empty, ; Unchanged.
+array_rotate empty, -1
+array_assert_equal empty, ; Unchanged.
+
 ; array_sort <name>
 ; Sorts an array in order from least to greatest.
 ; Uses an O(n log n) in-place merge sort algorithm.
@@ -354,7 +431,7 @@ assert result == 1
 array_reseed $deadbeef
 
 ; array_shuffle <name>
-; Randomly shuffle an array
+; Randomly shuffle an array.
 ; Uses the O(n) Fisher-Yates aka Knuth algorithm.
 array_shuffle primes
 array_assert_equal primes, 13, 2, 3, 29, 11, 5, 7, 37, 31, 19, 17, 23
@@ -430,6 +507,24 @@ array_max result, primes
 assert result == 37
 array_max result, single
 assert result == 23
+
+; array_argmin <result>, <name>
+; Find the index of a minimum value in a nonempty array.
+array_argmin result, fives
+assert result == 0
+array_argmin result, primes
+assert result == 1
+array_argmin result, single
+assert result == 0
+
+; array_argmax <result>, <name>
+; Find the index of a maximum value in a nonempty array.
+array_argmax result, fives
+assert result == 0
+array_argmax result, primes
+assert result == 7
+array_argmax result, single
+assert result == 0
 
 ; array_sum <result>, <name>
 ; Find the sum of values in an array,
