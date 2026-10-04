@@ -12,7 +12,8 @@ See [`examples.asm`](examples.asm) for demonstrations of how each macro is used.
 ## Credits
 
 Inspired by
-ISSOtm's [`structs.inc`](https://codeberg.org/ISSOtm/rgbds-structs),
+ISSOtm's [`structs.inc`](https://codeberg.org/ISSOtm/rgbds-structs)
+and [`debugfile.inc`](https://codeberg.org/ISSOtm/debugfile.inc),
 Evie's [`regex.inc`](https://github.com/eievui5/regex.inc), and
 GBDev's [`hardware.inc`](https://github.com/gbdev/hardware.inc).
 
