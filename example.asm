@@ -5,7 +5,7 @@ INCLUDE "arrays.inc"
 ; check_arrays_inc_min_version <major>[.<minor>]
 ; Check whether this library version meets a minimum required one.
 check_arrays_inc_min_version 1
-check_arrays_inc_min_version 1.1
+check_arrays_inc_min_version 1.2
 
 ; use_array_base <base>
 ; Set the base index for subsequent arrays.
@@ -15,10 +15,12 @@ use_array_base 0
 ; use_constant_arrays
 ; Set subsequent arrays to have constant items (immutable, `equ`).
 use_constant_arrays
+static_assert _arrays_are_constant
 
 ; use_variable_arrays
 ; Set subsequent arrays to have variable items (mutable, `=`).
-;use_variable_arrays
+use_variable_arrays
+static_assert !_arrays_are_constant
 
 ; def_array <name>, <...values>
 ; Defines a new array, initializing it with zero or more values.
@@ -31,11 +33,13 @@ def_array empty
 array_assert_equal empty
 static_assert empty#len == 0
 
-def_array primes, 2, 3, 5, 7, 11, 13, 17, 19
-array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19
+def_array primes, 1, 3, 5, 7, 11, 13, 17, 19
+array_assert_equal primes, 1, 3, 5, 7, 11, 13, 17, 19
 static_assert primes#len == 8
-static_assert primes$0 == 2
+static_assert primes$0 == 1
 static_assert primes$7 == 19
+def primes$0 = 2 ; Since arrays are variable.
+static_assert primes$0 == 2
 
 def_array odds
 def_array_item 1

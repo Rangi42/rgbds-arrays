@@ -3,8 +3,8 @@
 if !def(ARRAYS_INC)
 def ARRAYS_INC equ 1
 
-; The current version of this library is 1.1.
-def ARRAYS_VERSION equs "1.1"
+; The current version of this library is 1.2.
+def ARRAYS_VERSION equs "1.2"
 
 ; Check whether this library version meets a minimum required one.
 MACRO? check_arrays_inc_min_version ; <major>[.<minor>]
@@ -34,9 +34,9 @@ MACRO? use_array_base ; <base>
 ENDM
 
 ; Whether array items are constants (if 1) or variables (if 0).
-; Array items are constant by default.
+; Array items are variable by default.
 ; Only modify this using `use_constant_arrays` or `use_variable_arrays`.
-def _arrays_are_constant = 1
+def _arrays_are_constant = 0
 
 ; Set subsequent arrays to have constant items (immutable, `equ`).
 MACRO? use_constant_arrays
@@ -296,7 +296,7 @@ MACRO? array_clear ; <name>
 	for? __idx, \1#base, \1#base + \1#len
 		purge \1{__idx}
 	endr
-	redef \1#len {\1#equ} 0
+	redef \1#len equ 0
 	purge __idx
 ENDM
 
