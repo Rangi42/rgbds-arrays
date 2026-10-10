@@ -130,6 +130,31 @@ static_assert !def(copied#len)
 static_assert !def(copied$0)
 static_assert !def(copied$5)
 
+pushs "array_db/dw/dl", ROM0 ; Only necessary for testing `array_db/dw/dl`.
+
+; array_db <name>
+; Declares a `db` byte for each item of an array.
+: array_db empty
+static_assert @ - :- == empty#len
+: array_db primes
+static_assert @ - :- == primes#len
+
+; array_dw <name>
+; Declares a `dw` word for each item of an array.
+: array_dw empty
+static_assert @ - :- == empty#len * 2
+: array_dw primes
+static_assert @ - :- == primes#len * 2
+
+; array_dl <name>
+; Declares a `dl` long for each item of an array.
+: array_dl empty
+static_assert @ - :- == empty#len * 4
+: array_dl primes
+static_assert @ - :- == primes#len * 4
+
+pops
+
 ; array_clear <name>
 ; Removes all items from an array, resetting its length to 0.
 array_clear odds

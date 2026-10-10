@@ -96,6 +96,18 @@ Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append 
 
 Purges an array and all its items.
 
+### <code>array_db <i>&lt;name&gt;</i></code>
+
+Declares a `db` byte for each item of an array.
+
+### <code>array_dw <i>&lt;name&gt;</i></code>
+
+Declares a `dw` word for each item of an array.
+
+### <code>array_dl <i>&lt;name&gt;</i></code>
+
+Declares a `dl` long for each item of an array.
+
 ### <code>array_clear <i>&lt;name&gt;</i></code>
 
 Removes all items from an array, resetting its length to 0.

@@ -279,6 +279,33 @@ MACRO? def_array_slice ; <name>, <other>, <start pos> [, <end pos>]
 	endc
 ENDM
 
+; Declares a `db` byte for each item of an array.
+MACRO? array_db ; <name>
+	__check_array_defined \1, array_db
+	for? __idx, \1#base, \1#base + \1#len
+		db \1{__idx}
+	endr
+	purge __idx
+ENDM
+
+; Declares a `dw` word for each item of an array.
+MACRO? array_dw ; <name>
+	__check_array_defined \1, array_db
+	for? __idx, \1#base, \1#base + \1#len
+		dw \1{__idx}
+	endr
+	purge __idx
+ENDM
+
+; Declares a `dl` long for each item of an array.
+MACRO? array_dl ; <name>
+	__check_array_defined \1, array_db
+	for? __idx, \1#base, \1#base + \1#len
+		dl \1{__idx}
+	endr
+	purge __idx
+ENDM
+
 ; Purges an array and all its items.
 MACRO? array_purge ; <name>
 	__check_array_defined \1, array_purge
