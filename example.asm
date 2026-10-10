@@ -308,6 +308,8 @@ array_replace replacing, 2, 6, 3
 array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1
 array_replace replacing, 9, 1
 array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1 ; Unchanged.
+array_replace replacing, 3, 42, 0
+array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1 ; Unchanged.
 array_replace empty, 42, 99
 array_assert_equal empty, ; Unchanged.
 
@@ -321,6 +323,8 @@ array_assert_equal rreplacing, 1, 1, 2, 2, 3, 3, 5, 5, 3, 3, 2, 2, 1, 1
 array_rreplace rreplacing, 2, 6, 3
 array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1
 array_rreplace rreplacing, 9, 1
+array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1 ; Unchanged.
+array_rreplace rreplacing, 3, 42, 0
 array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1 ; Unchanged.
 array_rreplace empty, 42, 99
 array_assert_equal empty, ; Unchanged.
@@ -338,6 +342,8 @@ array_remove removing, 2, 3
 array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1
 array_remove removing, 9
 array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1 ; Unchanged.
+array_remove removing, 3, 0
+array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1 ; Unchanged.
 array_remove empty, 42
 array_assert_equal empty, ; Unchanged.
 
@@ -353,6 +359,8 @@ static_assert result == 0
 array_rremove rremoving, 2, 3
 array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1
 array_rremove rremoving, 9
+array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1 ; Unchanged.
+array_rremove rremoving, 3, 0
 array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1 ; Unchanged.
 array_rremove empty, 42
 array_assert_equal empty, ; Unchanged.

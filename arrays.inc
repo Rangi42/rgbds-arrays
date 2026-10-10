@@ -608,7 +608,7 @@ MACRO? array_replace ; <name>, <old>, <new> [, <limit>]
 	endc
 	def __num = 0
 	for? __idx, \1#base, \1#base + \1#len
-		if \1{__idx} == __old
+		if \1{__idx} == __old && __num < __limit
 			redef \1{__idx} {\1#equ} __new
 			def __num += 1
 			if __num == __limit
@@ -633,7 +633,7 @@ MACRO? array_rreplace ; <name>, <old>, <new> [, <limit>]
 	endc
 	def __num = 0
 	for? __idx, \1#base + \1#len - 1, \1#base - 1, -1
-		if \1{__idx} == __old
+		if \1{__idx} == __old && __num < __limit
 			redef \1{__idx} {\1#equ} __new
 			def __num += 1
 			if __num == __limit
