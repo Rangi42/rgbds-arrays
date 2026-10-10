@@ -120,15 +120,14 @@ MACRO? __init_array ; <name>, <length>, <macro context>
 	redef def_array_item equs "array_append \1,"
 ENDM
 
-; Checks whether an array's contents have exactly the specified values.
+; Asserts that an array's contents have exactly the specified values.
 MACRO? array_assert_equal ; <name>, <...values>
 	__check_array_defined \1, array_assert_equal
 	if \1#len != _NARG - 1
 		fail strfmt("array_assert_equal: \1#len is %d, not %d", \1#len, _NARG - 1)
 	endc
-	def __start = \1#base - 2
 	for? __argi, 2, _NARG + 1
-		def __idx = __start + __argi
+		def __idx = \1#base + __argi - 2
 		if \1{__idx} != (\<__argi>)
 			fail strfmt("array_assert_equal: \1{__idx} is %d, not %d", \1{__idx}, \<__argi>)
 		endc
@@ -137,19 +136,18 @@ MACRO? array_assert_equal ; <name>, <...values>
 	if def(\1{__idx})
 		warn strfmt("array_assert_equal: \1{__idx} is unexpectedly defined")
 	endc
-	purge __start, __argi, __idx
+	purge __argi, __idx
 ENDM
 
 ; Defines a new array, initializing it with zero or more values.
 ; Redefines `def_array_item <...values>` to append values to this array.
 MACRO? def_array ; <name>, <...values>
 	__init_array \1, {_NARG} - 1, def_array
-	def __start = \1#base - 2
 	for? __argi, 2, _NARG + 1
-		def __idx = __start + __argi
+		def __idx = \1#base + __argi - 2
 		redef \1{__idx} {\1#equ} \<__argi>
 	endr
-	purge __start, __argi
+	purge __argi
 	if def(__idx)
 		purge __idx
 	endc
@@ -432,13 +430,12 @@ ENDM
 ; Appends zero or more values to the end of an array.
 MACRO? array_append ; <name>, <...values>
 	__check_array_defined \1, array_append
-	def __start = \1#base + \1#len
 	for? __argi, 2, _NARG + 1
-		def __idx = __start + __argi - 2
+		def __idx = \1#base + \1#len + __argi - 2
 		redef \1{__idx} {\1#equ} \<__argi>
 	endr
 	redef \1#len equ \1#len + _NARG - 1
-	purge __start, __argi
+	purge __argi
 	if def(__idx)
 		purge __idx
 	endc
@@ -877,6 +874,28 @@ MACRO? array_is_rsorted ; <result>, <name>
 	endc
 	if def(__prev)
 		purge __prev, __idx
+	endc
+ENDM
+
+; Checks whether an array's contents have exactly the specified values,
+; setting the result to 1 if it does or 0 if it does not.
+MACRO? array_is_equal ; <result>, <name>, <...values>
+	__check_array_defined \2, array_is_equal
+	def \1 = 1
+	if \2#len != _NARG - 2
+		def \1 = 0
+	else
+		for? __argi, 3, _NARG + 1
+			def __idx = \2#base + __argi - 3
+			if \2{__idx} != (\<__argi>)
+				def \1 = 0
+				break
+			endc
+		endr
+		purge __argi
+		if def(__idx)
+			purge __idx
+		endc
 	endc
 ENDM
 

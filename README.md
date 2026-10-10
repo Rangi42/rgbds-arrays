@@ -51,7 +51,7 @@ Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append 
 
 ### <code>array_assert_equal <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
-Checks whether an array's contents have exactly the specified values.
+Asserts that an array's contents have exactly the specified values.
 
 ### <code>def_array_fill <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0]</code>
 
@@ -227,6 +227,11 @@ setting the result to 1 if it is or 0 if it is not.
 
 Checks whether an array is sorted from greatest to least,
 setting the result to 1 if it is or 0 if it is not.
+
+### <code>array_is_equal <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
+
+Checks whether an array's contents have exactly the specified values,
+setting the result to 1 if it does or 0 if it does not.
 
 ### <code>array_reseed <i>&lt;seed&gt;</i></code>
 

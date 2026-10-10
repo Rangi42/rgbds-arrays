@@ -27,7 +27,7 @@ static_assert !_arrays_are_constant
 ; Redefines `def_array_item <...values>` to append values to this array.
 
 ; array_assert_equal <name>, <...values>
-; Checks whether an array's contents have exactly the specified values.
+; Asserts that an array's contents have exactly the specified values.
 
 def_array empty
 array_assert_equal empty,
@@ -445,6 +445,18 @@ static_assert result == 0
 array_rsort primes
 array_is_rsorted result, primes
 static_assert result == 1
+
+; array_is_equal <result>, <name>, <...values>
+; Checks whether an array's contents have exactly the specified values,
+; setting the result to 1 if it does or 0 if it does not.
+array_is_equal result, empty,
+static_assert result == 1
+array_is_equal result, empty, 42
+static_assert result == 0
+array_is_equal result, primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+static_assert result == 1
+array_is_equal result, primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3
+static_assert result == 0
 
 ; array_reseed <seed>
 ; Reseed the xorshift32 PRNG used in randomized array macros
