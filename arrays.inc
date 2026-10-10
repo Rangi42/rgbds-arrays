@@ -773,8 +773,8 @@ ENDM
 MACRO? __sort_array ; <name>, <operator>, <macro context>
 	__check_array_defined \1, \3
 	def __cap = \1#base + \1#len
-	def __max = 0
-	for? __p, 1, 32
+	def __max = 1
+	for? __p, 1, 31
 		if \1#len >= 1 << __p
 			def __max += 1
 		endc
