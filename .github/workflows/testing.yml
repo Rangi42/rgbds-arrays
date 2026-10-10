@@ -10,12 +10,6 @@ jobs:
       - name: Install RGBDS
         run: |
           brew install rgbds
-      - name: Check that example assembles correctly
+      - name: Run test.sh
         run: |
-          STATEFILE=$(mktemp -t state.XXXXXX)
-          trap "rm -f $STATEFILE" EXIT
-          rgbasm -Weverything -s "equ,var:$STATEFILE" example.asm
-          if grep -E "^def __" "$STATEFILE"; then
-            echo "Unpurged internal temporary symbols!"
-            exit 1
-          fi
+          .github/test.sh
