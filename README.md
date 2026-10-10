@@ -85,9 +85,9 @@ Defines a new array as a concatenation of other arrays.
 
 Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to this array.
 
-### <code>def_array_slice <i>&lt;name&gt;</i>, <i>&lt;other&gt;</i>, <i>&lt;start index&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
+### <code>def_array_slice <i>&lt;name&gt;</i>, <i>&lt;other&gt;</i>, <i>&lt;start pos&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
 
-Defines a new array as a slice of another array starting at an index,
+Defines a new array as a slice of another array starting at a position,
 and ending before a subsequent position if one is specified.
 
 Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to this array.
@@ -155,9 +155,9 @@ Shifts the value from the beginning of a nonempty array.
 
 Extends an array by concatenating other arrays.
 
-### <code>array_slice <i>&lt;name&gt;</i>, <i>&lt;start index&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
+### <code>array_slice <i>&lt;name&gt;</i>, <i>&lt;start pos&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
 
-Redefines an array to be a slice of itself starting at an index,
+Redefines an array to be a slice of itself starting at a position,
 and ending before a subsequent position if one is specified.
 
 ### <code>array_contains <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;value&gt;</i></code>

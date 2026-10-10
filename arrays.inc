@@ -255,13 +255,13 @@ MACRO? def_array_concat ; <name>, <...others>
 	endc
 ENDM
 
-; Defines a new array as a slice of another array starting at an index,
+; Defines a new array as a slice of another array starting at a position,
 ; and ending before a subsequent position if one is specified.
 ; Redefines `def_array_item <...values>` to append values to this array.
-MACRO? def_array_slice ; <name>, <other>, <start index> [, <end pos>]
+MACRO? def_array_slice ; <name>, <other>, <start pos> [, <end pos>]
 	__check_array_defined \2, def_array_slice
 	def __start = \3
-	__check_array_index \2, __start, def_array_slice
+	__check_array_pos \2, __start, def_array_slice
 	if _NARG == 4
 		def __end = \4
 		__check_array_pos \2, __end, def_array_slice
@@ -507,12 +507,12 @@ MACRO? array_extend ; <name>, <...others>
 	endc
 ENDM
 
-; Redefines an array to be a slice of itself starting at an index,
+; Redefines an array to be a slice of itself starting at a position,
 ; and ending before a subsequent position if one is specified.
-MACRO? array_slice ; <name>, <start index> [, <end pos>]
+MACRO? array_slice ; <name>, <start pos> [, <end pos>]
 	__check_array_defined \1, array_slice
 	def __start = \2
-	__check_array_index \1, __start, array_slice
+	__check_array_pos \1, __start, array_slice
 	if _NARG == 3
 		def __end = \3
 		__check_array_pos \1, __end, array_slice

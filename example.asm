@@ -30,7 +30,7 @@ static_assert !_arrays_are_constant
 ; Checks whether an array's contents have exactly the specified values.
 
 def_array empty
-array_assert_equal empty
+array_assert_equal empty,
 static_assert empty#len == 0
 
 def_array primes, 1, 3, 5, 7, 11, 13, 17, 19
@@ -107,8 +107,8 @@ def_array_concat concatenated_none,
 array_assert_equal concatenated_none,
 static_assert concatenated_none#len == 0
 
-; def_array_slice <name>, <other>, <start index> [, <end pos>]
-; Defines a new array as a slice of another array starting at an index,
+; def_array_slice <name>, <other>, <start pos> [, <end pos>]
+; Defines a new array as a slice of another array starting at a position,
 ; and ending before a subsequent position if one is specified.
 ; Redefines `def_array_item <...values>` to append values to this array.
 def_array_slice sliced_primes, primes, 3
@@ -117,6 +117,8 @@ def_array_slice sliced_concatenated, concatenated, 4, 12
 array_assert_equal sliced_concatenated, 11, 13, 17, 19, 1, 2, 3, 4
 def_array_slice sliced_empty, naturals, 9, 9
 array_assert_equal sliced_empty,
+def_array_slice sliced_end, naturals, naturals#base + naturals#len
+array_assert_equal sliced_end,
 
 ; array_purge <name>
 ; Purges an array and all its items.
@@ -250,13 +252,17 @@ static_assert primes$D == zeros$1
 static_assert primes$E == zeros$2
 static_assert primes$F == zeros$3
 
-; array_slice <name>, <start index> [, <end pos>]
-; Redefines an array to be a slice of itself starting at an index,
+; array_slice <name>, <start pos> [, <end pos>]
+; Redefines an array to be a slice of itself starting at a position,
 ; and ending before a subsequent position if one is specified.
 array_slice odds, 2
 array_assert_equal odds, 3, 5, 7, 9
+array_slice odds, odds#base, odds#base + odds#len
+array_assert_equal odds, 3, 5, 7, 9 ; Unchanged.
 array_slice primes, 0, 12
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_slice empty, 0
+array_assert_equal empty, ; Unchanged.
 
 ; array_contains <result>, <name>, <value>
 ; Checks whether a value exists in an array,
