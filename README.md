@@ -2,7 +2,7 @@
 
 A [RGBDS](https://rgbds.gbdev.io) macro pack that provides array-like functionality.
 
-The latest version is **1.2**.
+The latest version is **1.3**.
 
 ## Usage
 

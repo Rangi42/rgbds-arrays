@@ -3,8 +3,8 @@
 if !def(ARRAYS_INC)
 def ARRAYS_INC equ 1
 
-; The current version of this library is 1.2.
-def ARRAYS_VERSION equs "1.2"
+; The current version of this library is 1.3.
+def ARRAYS_VERSION equs "1.3"
 
 ; Check whether this library version meets a minimum required one.
 MACRO? check_arrays_inc_min_version ; <major>[.<minor>]

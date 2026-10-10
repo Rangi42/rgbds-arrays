@@ -5,7 +5,7 @@ INCLUDE "arrays.inc"
 ; check_arrays_inc_min_version <major>[.<minor>]
 ; Check whether this library version meets a minimum required one.
 check_arrays_inc_min_version 1
-check_arrays_inc_min_version 1.2
+check_arrays_inc_min_version 1.3
 
 ; use_array_base <base>
 ; Set the base index for subsequent arrays.
