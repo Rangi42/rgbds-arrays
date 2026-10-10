@@ -85,6 +85,9 @@ static_assert countdown#len == 11
 static_assert countdown$0 == 10
 static_assert countdown$A == 0
 
+def_array_range empty_range, 5, 5 ; This should print a warning.
+static_assert empty_range#len == 0
+
 def_array_range backwards, 1, 5, -1 ; This should print a warning.
 static_assert backwards#len == 0
 
