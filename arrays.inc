@@ -8,17 +8,16 @@ def ARRAYS_VERSION equs "1.2"
 
 ; Check whether this library version meets a minimum required one.
 MACRO? check_arrays_inc_min_version ; <major>[.<minor>]
-	pusho Q16
-		if strfind("\1", ".") != -1
-			def __min_ver equs "\1"
-		else
-			def __min_ver equs "\1.0"
+	if _NARG == 1 ; Actual invocation by the user
+		def __cur_ver equs strrpl("{ARRAYS_VERSION}", ".", ",")
+		def __min_ver equs strrpl("\1", ".", ",")
+		check_arrays_inc_min_version \1, {__cur_ver}, {__min_ver}, 0
+		purge __cur_ver, __min_ver
+	else ; Recursive invocation
+		if \2 != \4 || (\2 == \4 && \3 < \5)
+			fail "arrays.inc version {ARRAYS_VERSION} is incompatible with minimum required version \1"
 		endc
-		if {ARRAYS_VERSION} < {__min_ver}
-			fail "arrays.inc version {ARRAYS_VERSION} is incompatible with minimum required version {__min_ver}"
-		endc
-	popo
-	purge __min_ver
+	endc
 ENDM
 
 ; The base index for arrays.
