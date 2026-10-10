@@ -888,7 +888,11 @@ def _arrays_prng = ((((__UTC_SECOND__ * 60 + __UTC_MINUTE__) * 60 + __UTC_HOUR__
 
 ; Reseed the xorshift32 PRNG used in randomized array macros
 ; (array_shuffle and array_pick).
+; The seed cannot be zero, since that would only generate more zeros.
 MACRO? array_reseed ; <seed>
+	if (\1) == 0
+		fail "array_reseed: xorshift32 PRNG seed cannot be zero"
+	endc
 	def _arrays_prng = \1
 ENDM
 

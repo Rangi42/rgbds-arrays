@@ -449,6 +449,7 @@ static_assert result == 1
 ; array_reseed <seed>
 ; Reseed the xorshift32 PRNG used in randomized array macros
 ; (array_shuffle and array_pick).
+; The seed cannot be zero, since that would only generate more zeros.
 array_reseed $deadbeef
 
 ; array_shuffle <name>

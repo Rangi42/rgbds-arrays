@@ -232,6 +232,7 @@ setting the result to 1 if it is or 0 if it is not.
 
 Reseed the xorshift32 PRNG used in randomized array macros
 (`array_shuffle` and `array_pick`).
+The seed cannot be zero, since that would only generate more zeros.
 
 ### <code>array_shuffle <i>&lt;name&gt;</i></code>
 
