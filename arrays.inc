@@ -134,10 +134,11 @@ MACRO? array_assert_equal ; <name>, <...values>
 			fail strfmt("array_assert_equal: \1{__idx} is %d, not %d", \1{__idx}, \<__argi>)
 		endc
 	endr
-	purge __start, __argi
-	if def(__idx)
-		purge __idx
+	def __idx = \1#base + \1#len
+	if def(\1{__idx})
+		warn strfmt("array_assert_equal: \1{__idx} is unexpectedly defined")
 	endc
+	purge __start, __argi, __idx
 ENDM
 
 ; Defines a new array, initializing it with zero or more values.
@@ -311,7 +312,7 @@ MACRO? array_pad ; <name>, <length> [, <value> = 0]
 		else
 			def __val = 0
 		endc
-		for? __idx, \1#base + \1#len, \1#base + \1#len + __len
+		for? __idx, \1#base + \1#len, \1#base + __len
 			redef \1{__idx} {\1#equ} __val
 		endr
 		redef \1#len equ __len
