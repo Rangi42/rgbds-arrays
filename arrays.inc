@@ -273,7 +273,7 @@ MACRO? def_array_slice ; <name>, <other>, <start index> [, <end pos>]
 	endc
 	__init_array \1, __end - __start, def_array_slice
 	for? __idx, __start, __end
-		def __new = __idx + \2#base - __start
+		def __new = __idx + \1#base - __start
 		redef \1{__new} {\1#equ} \2{__idx}
 	endr
 	purge __start, __end, __idx
