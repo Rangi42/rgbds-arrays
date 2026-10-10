@@ -539,7 +539,7 @@ ENDM
 ; Checks whether a value exists in an array,
 ; setting the result to 1 if it does or 0 if it does not.
 MACRO? array_contains ; <result>, <name>, <value>
-	__check_array_defined \2, array_find
+	__check_array_defined \2, array_contains
 	def \1 = 0
 	def __val = \3
 	for? __idx, \2#base, \2#base + \2#len
