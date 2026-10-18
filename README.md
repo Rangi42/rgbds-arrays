@@ -27,7 +27,7 @@ for idx, stats#len
 endr
 ```
 
-(Remember, `{braces}` *interpolate* their contents, and numeric symbols expand to `$`-prefixed uppercase hexadecimal. So `stats{idx}` will count `stats$0`, `stats$1`, ...`stats$9`, `stats$A`, `stats$B`, etc.)
+(Remember, `{braces}` [*interpolate*](https://rgbds.gbdev.io/docs/rgbasm.5#Symbol_interpolation) their contents, and numeric symbols expand to `$`-prefixed uppercase hexadecimal. So `stats{idx}` will count `stats$0`, `stats$1`, ...`stats$9`, `stats$A`, `stats$B`, etc.)
 
 Or if your array `names` is 1-indexed and has `equs` string items, here's how to make each item uppercase:
 
@@ -37,7 +37,7 @@ for idx, 1, names#len + 1
 endr
 ```
 
-(Remember, in RGBDS v0.x and v1.x, the names of string constants *expand* to their contents, so you have to prefix them with `#` to make them *raw identifiers* which don't expand like that.)
+(Remember, in RGBDS v0.x and v1.x, the names of string constants [*expand*](https://rgbds.gbdev.io/docs/rgbasm.5#String_constants) to their contents, so you have to prefix them with `#` to make them *raw identifiers* which don't expand like that.)
 
 ## Macros
 
@@ -129,15 +129,15 @@ Typically 0 or 1, but higher non-negative bases are also technically valid.
 
 #### `use_variable_arrays`
 
-Set subsequently defined arrays to have variable items (mutable, `=`).
+Set subsequently defined arrays to have [variable](https://rgbds.gbdev.io/docs/rgbasm.5#Variables) items (mutable, `=`).
 
 #### `use_constant_arrays`
 
-Set subsequently defined arrays to have constant items (immutable, `equ`).
+Set subsequently defined arrays to have [constant](https://rgbds.gbdev.io/docs/rgbasm.5#Numeric_constants) items (immutable, `equ`).
 
 #### `use_string_arrays`
 
-Set subsequently defined arrays to have string items (immutable, `equs`).
+Set subsequently defined arrays to have [string](https://rgbds.gbdev.io/docs/rgbasm.5#String_constants) items (immutable, `equs`).
 String arrays are not compatible with functions that require numeric items
 (`def_array_range`, `array_product`, and `array_mean`),
 but are uniquely compatible with functions that require string items
@@ -172,10 +172,10 @@ or with N zeros (or empty strings for string arrays) if the value is unspecified
 
 #### <code>def_array_range <i>&lt;name&gt;</i> [, <i>&lt;start&gt;</i> = 0], <i>&lt;stop&gt;</i> [, <i>&lt;step&gt;</i> = 1]</code>
 
-Defines a new array, initializing it to be an arithmetic sequence.
+Defines a new array, initializing it to be an [arithmetic sequence](https://en.wikipedia.org/wiki/Arithmetic_progression).
 
 - <b><code>def_array_range <i>&lt;name&gt;</i>, <i>&lt;stop&gt;</i></code></b>
-  gives the half-open interval [0, <i>&lt;stop&gt;</i>).
+  gives the [half-open interval](https://en.wikipedia.org/wiki/Interval_(mathematics)#Half-open_intervals) [0, <i>&lt;stop&gt;</i>).
 - <b><code>def_array_range <i>&lt;name&gt;</i>, <i>&lt;start&gt;</i>, <i>&lt;stop&gt;</i></code></b>
   gives the half-open interval [<i>&lt;start&gt;</i>, <i>&lt;stop&gt;</i>).
 - <b><code>def_array_range <i>&lt;name&gt;</i>, <i>&lt;start&gt;</i>, <i>&lt;stop&gt;</i>, <i>&lt;step&gt;</i></code></b>
@@ -196,7 +196,7 @@ and ending before a subsequent position if one is specified.
 
 #### <code>array_purge <i>&lt;...names&gt;</i></code>
 
-Purges an array and all its items.
+[Purges](https://rgbds.gbdev.io/docs/rgbasm.5#Purging_symbols) an array and all its items.
 
 ### 3. Output
 
@@ -284,8 +284,8 @@ Extends an array by concatenating other arrays.
 
 #### <code>array_slice <i>&lt;name&gt;</i>, <i>&lt;start pos&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
 
-Redefines an array to be a slice of itself starting at a position,
-and ending before a subsequent position if one is specified.
+Slices an array to start at a specified position,
+and end before a subsequent position if one is specified.
 
 #### <code>array_clear <i>&lt;name&gt;</i></code>
 
@@ -346,7 +346,7 @@ or left by a negative amount.
 #### <code>array_sort <i>&lt;name&gt;</i></code>
 
 Sorts an array in order from least to greatest.
-Uses an 𝒪(<i>n</i> log <i>n</i>) in-place merge sort algorithm.
+Uses an 𝒪(<i>n</i> log <i>n</i>) in-place [merge sort](https://en.wikipedia.org/wiki/Merge_sort) algorithm.
 
 #### <code>array_rsort <i>&lt;name&gt;</i></code>
 
@@ -357,14 +357,14 @@ Uses an 𝒪(<i>n</i> log <i>n</i>) in-place merge sort algorithm.
 
 #### <code>array_reseed <i>&lt;seed&gt;</i></code>
 
-Reseed the xorshift32 PRNG used in randomized array macros
+Reseed the [xorshift32](https://en.wikipedia.org/wiki/Xorshift) [PRNG](https://en.wikipedia.org/wiki/Pseudorandom_number_generator) used in randomized array macros
 (`array_shuffle` and `array_pick`).
 The seed cannot be zero, since that would only generate more zeros.
 
 #### <code>array_shuffle <i>&lt;name&gt;</i></code>
 
 Randomly shuffle an array.
-Uses the 𝒪(<i>n</i>) Fisher-Yates aka Knuth algorithm.
+Uses the 𝒪(<i>n</i>) [Fisher-Yates](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle) aka Knuth algorithm.
 
 #### <code>array_pick <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 

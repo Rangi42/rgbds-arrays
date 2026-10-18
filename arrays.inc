@@ -629,8 +629,8 @@ MACRO? array_extend ; <name>, <...others>
 	endc
 ENDM
 
-; Redefines an array to be a slice of itself starting at a position,
-; and ending before a subsequent position if one is specified.
+; Slices an array to start at a specified position,
+; and end before a subsequent position if one is specified.
 MACRO? array_slice ; <name>, <start pos> [, <end pos>]
 	__check_array_defined \1, array_slice
 	def __start = \2

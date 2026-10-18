@@ -302,8 +302,8 @@ static_assert primes$E == zeros$2
 static_assert primes$F == zeros$3
 
 ; array_slice <name>, <start pos> [, <end pos>]
-; Redefines an array to be a slice of itself starting at a position,
-; and ending before a subsequent position if one is specified.
+; Slices an array to start at a specified position,
+; and end before a subsequent position if one is specified.
 array_slice odds, 2
 array_assert_equal odds, 3, 5, 7, 9
 array_slice odds, odds#base, odds#base + odds#len
