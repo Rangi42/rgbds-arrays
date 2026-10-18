@@ -43,6 +43,12 @@ Set subsequent arrays to have variable items (mutable, `=`).
 
 Set subsequent arrays to have constant items (immutable, `equ`).
 
+### `use_string_arrays`
+
+Set subsequent arrays to have string items (immutable, `equs`).
+String arrays are not compatible with functions that require numeric items
+(`def_array_range`, `array_product`, and `array_mean`).
+
 ### <code>def_array <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
 Defines a new array, initializing it with zero or more values.
@@ -53,10 +59,10 @@ Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append 
 
 Asserts that an array's contents have exactly the specified values.
 
-### <code>def_array_fill <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0]</code>
+### <code>def_array_fill <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0/""]</code>
 
 Defines a new array, initializing it to be filled with N of the same value,
-or with N zeros if the value is unspecified.
+or with N zeros (or empty strings for string arrays) if the value is unspecified.
 
 Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to this array.
 
@@ -112,15 +118,15 @@ Declares a `dl` long for each item of an array.
 
 Removes all items from an array, resetting its length to 0.
 
-### <code>array_pad <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0]</code>
+### <code>array_pad <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0/""]</code>
 
 Pads the end of an array up to a minimum length with a given value,
-or with 0 if the value is unspecified.
+or with zeros (or empty strings for string arrays) if the value is unspecified.
 
-### <code>array_lpad <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0]</code>
+### <code>array_lpad <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0/""]</code>
 
 Pads the beginning of an array up to a minimum length with a given value,
-or with 0 if the value is unspecified.
+or with zeros (or empty strings for string arrays) if the value is unspecified.
 
 ### <code>array_print <i>&lt;name&gt;</i></code>
 
@@ -297,14 +303,18 @@ Find the index of a maximum value in a nonempty array.
 
 ### <code>array_sum <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
-Find the sum of values in an array,
+Take the sum of values in an array,
 or 0 if the array is empty.
+For string arrays, take the concatenation of values,
+or "" if the array is empty.
 
 ### <code>array_product <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
-Find the product of values in an array,
+Take the product of values in an array,
 or 1 if the array is empty.
+Not compatible with string arrays.
 
 ### <code>array_mean <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
-Find the mean (average) of values in a nonempty array.
+Take the mean (average) of values in a nonempty array.
+Not compatible with string arrays.

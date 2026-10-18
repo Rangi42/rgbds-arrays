@@ -59,9 +59,9 @@ static_assert odds#len == 5
 static_assert odds$0 == 1
 static_assert odds$4 == 9
 
-; def_array_fill <name>, <length> [, <value> = 0]
+; def_array_fill <name>, <length> [, <value> = 0/""]
 ; Defines a new array, initializing it to be filled with N of the same value,
-; or with N zeros if the value is unspecified.
+; or with N zeros (or empty strings for string arrays) if the value is unspecified.
 ; Redefines `def_array_item <...values>` to append values to this array.
 
 def_array_fill zeros, 4
@@ -79,6 +79,7 @@ array_assert_equal fives, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
 ; - `def_array_range <name>, <start>, <stop>, <step>`
 ;   gives the half-open interval [<start>, <stop>), skipping by <step>.
 ; Redefines `def_array_item <...values>` to append values to this array.
+; Not compatible with string arrays.
 
 def_array_range naturals, 10
 array_assert_equal naturals, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -169,9 +170,9 @@ array_assert_equal odds, ; Empty.
 static_assert odds#len == 0
 static_assert !def(odds$0)
 
-; array_pad <name>, <length> [, <value> = 0]
+; array_pad <name>, <length> [, <value> = 0/""]
 ; Pads the end of an array up to a minimum length with a given value,
-; or with 0 if the value is unspecified.
+; or with zeros (or empty strings for string arrays) if the value is unspecified.
 array_pad primes, 5
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19 ; Unchanged.
 array_pad primes, 9
@@ -179,9 +180,9 @@ array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0
 array_pad primes, 12, 257
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257
 
-; array_lpad <name>, <length> [, <value> = 0]
+; array_lpad <name>, <length> [, <value> = 0/""]
 ; Pads the beginning of an array up to a minimum length with a given value,
-; or with 0 if the value is unspecified.
+; or with zeros (or empty strings for string arrays) if the value is unspecified.
 array_lpad primes, 10
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257 ; Unchanged.
 array_lpad primes, 14
@@ -231,9 +232,7 @@ array_insert odds, 0, 3
 array_assert_equal odds, 3
 array_insert odds, 0, 1
 array_assert_equal odds, 1, 3
-array_insert odds, 2, 7
-array_assert_equal odds, 1, 3, 7
-array_insert odds, 2, 5
+array_insert odds, 2, 5, 7
 array_assert_equal odds, 1, 3, 5, 7
 array_insert odds, 2,
 array_assert_equal odds, 1, 3, 5, 7 ; Unchanged.
@@ -256,21 +255,21 @@ array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
 ; Pops the value from the end of a nonempty array.
 def_array_range evens, 2, 13, 2
 array_assert_equal evens, 2, 4, 6, 8, 10, 12
-array_pop result, evens
-static_assert result == 12
+array_pop element, evens
+static_assert element == 12
 array_assert_equal evens, 2, 4, 6, 8, 10
-array_pop result, evens
-static_assert result == 10
+array_pop element, evens
+static_assert element == 10
 array_assert_equal evens, 2, 4, 6, 8
 
 ; array_shift <result>, <name>
 ; Shifts the value from the beginning of a nonempty array.
 array_assert_equal evens, 2, 4, 6, 8
-array_shift result, evens
-static_assert result == 2
+array_shift element, evens
+static_assert element == 2
 array_assert_equal evens, 4, 6, 8
-array_shift result, evens
-static_assert result == 4
+array_shift element, evens
+static_assert element == 4
 array_assert_equal evens, 6, 8
 
 ; array_extend <name>, <...others>
@@ -492,7 +491,7 @@ static_assert result == 0
 
 ; array_reseed <seed>
 ; Reseed the xorshift32 PRNG used in randomized array macros
-; (array_shuffle and array_pick).
+; (`array_shuffle` and `array_pick`).
 ; The seed cannot be zero, since that would only generate more zeros.
 array_reseed $deadbeef
 
@@ -506,11 +505,11 @@ array_assert_equal empty, ; Unchanged.
 
 ; array_pick <result>, <name>
 ; Randomly pick an item from a nonempty array.
-array_pick result, primes
-static_assert result == primes$8
+array_pick element, primes
+static_assert element == primes$8
 def_array single, 23
-array_pick result, single
-static_assert result == 23
+array_pick element, single
+static_assert element == 23
 
 ; array_dedup <name>
 ; Deduplicates an array by reducing runs of the same value to one item.
@@ -558,21 +557,21 @@ static_assert result == 1
 
 ; array_min <result>, <name>
 ; Find the minimum value in a nonempty array.
-array_min result, fives
-static_assert result == 5
-array_min result, primes
-static_assert result == 2
-array_min result, single
-static_assert result == 23
+array_min element, fives
+static_assert element == 5
+array_min element, primes
+static_assert element == 2
+array_min element, single
+static_assert element == 23
 
 ; array_max <result>, <name>
 ; Find the maximum value in a nonempty array.
-array_max result, fives
-static_assert result == 5
-array_max result, primes
-static_assert result == 37
-array_max result, single
-static_assert result == 23
+array_max element, fives
+static_assert element == 5
+array_max element, primes
+static_assert element == 37
+array_max element, single
+static_assert element == 23
 
 ; array_argmin <result>, <name>
 ; Find the index of a minimum value in a nonempty array.
@@ -593,8 +592,10 @@ array_argmax result, single
 static_assert result == 0
 
 ; array_sum <result>, <name>
-; Find the sum of values in an array,
+; Take the sum of values in an array,
 ; or 0 if the array is empty.
+; For string arrays, take the concatenation of values,
+; or "" if the array is empty.
 array_sum result, fives
 static_assert result == 50
 array_sum result, primes
@@ -605,7 +606,7 @@ array_sum result, empty
 static_assert result == 0
 
 ; array_product <result>, <name>
-; Find the product of values in an array,
+; Take the product of values in an array,
 ; or 1 if the array is empty.
 array_product result, odds
 static_assert result == 945
@@ -615,7 +616,8 @@ array_product result, empty
 static_assert result == 1
 
 ; array_mean <result>, <name>
-; Find the mean (average) of values in a nonempty array.
+; Take the mean (average) of values in a nonempty array.
+; Not compatible with string arrays.
 array_mean result, fives
 static_assert result == 5
 array_mean result, primes
@@ -629,7 +631,7 @@ array_purge backwards, concatenated, concatenated_none, countdown, \
             positives, primes, removing, replacing, rotating, rremoving, \
             rreplacing, single, sliced_concatenated, sliced_empty, sliced_end, \
             sliced_primes, zeros
-purge result, index, prime_11
+purge result, index, element, prime_11
 
 
 ; ==============================================================================
@@ -707,8 +709,8 @@ array_assert_equal sliced_end,
 
 array_purge copied
 static_assert !def(copied#len)
-static_assert !def(copied$0)
-static_assert !def(copied$5)
+static_assert !def(copied$1)
+static_assert !def(copied$6)
 
 pushs "array_db/dw/dl constant", ROM0 ; Only necessary for testing `array_db/dw/dl`.
 
@@ -732,7 +734,7 @@ pops
 array_clear odds
 array_assert_equal odds, ; Empty.
 static_assert odds#len == 0
-static_assert !def(odds$0)
+static_assert !def(odds$1)
 
 array_pad primes, 5
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19 ; Unchanged.
@@ -755,8 +757,8 @@ println "... liftoff!"
 print "Empty: "
 array_println empty
 
-array_get prime_11, primes, 11
-static_assert prime_11 == primes$B
+array_get prime_12, primes, 12
+static_assert prime_12 == primes$C
 
 array_set primes, 13, 23
 array_set primes, 14, 29
@@ -777,9 +779,7 @@ array_insert odds, 1, 3
 array_assert_equal odds, 3
 array_insert odds, 1, 1
 array_assert_equal odds, 1, 3
-array_insert odds, 3, 7
-array_assert_equal odds, 1, 3, 7
-array_insert odds, 3, 5
+array_insert odds, 3, 5, 7
 array_assert_equal odds, 1, 3, 5, 7
 array_insert odds, 3,
 array_assert_equal odds, 1, 3, 5, 7 ; Unchanged.
@@ -796,19 +796,19 @@ array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
 
 def_array_range evens, 2, 13, 2
 array_assert_equal evens, 2, 4, 6, 8, 10, 12
-array_pop result, evens
-static_assert result == 12
+array_pop element, evens
+static_assert element == 12
 array_assert_equal evens, 2, 4, 6, 8, 10
-array_pop result, evens
-static_assert result == 10
+array_pop element, evens
+static_assert element == 10
 array_assert_equal evens, 2, 4, 6, 8
 
 array_assert_equal evens, 2, 4, 6, 8
-array_shift result, evens
-static_assert result == 2
+array_shift element, evens
+static_assert element == 2
 array_assert_equal evens, 4, 6, 8
-array_shift result, evens
-static_assert result == 4
+array_shift element, evens
+static_assert element == 4
 array_assert_equal evens, 6, 8
 
 array_extend odds, empty, empty, empty
@@ -987,11 +987,11 @@ array_assert_equal primes, 13, 2, 3, 29, 11, 5, 7, 37, 31, 19, 17, 23
 array_shuffle empty
 array_assert_equal empty, ; Unchanged.
 
-array_pick result, primes
-static_assert result == primes$9
+array_pick element, primes
+static_assert element == primes$9
 def_array single, 23
-array_pick result, single
-static_assert result == 23
+array_pick element, single
+static_assert element == 23
 
 def_array deduplicating, 1, 1, 2, 3, 3, 3, 2, 2, 1, 4, 4, 4, 4, 3, 2, 1, 1
 array_dedup deduplicating
@@ -1026,19 +1026,19 @@ static_assert result == 1
 array_are_all_unique result, empty
 static_assert result == 1
 
-array_min result, fives
-static_assert result == 5
-array_min result, primes
-static_assert result == 2
-array_min result, single
-static_assert result == 23
+array_min element, fives
+static_assert element == 5
+array_min element, primes
+static_assert element == 2
+array_min element, single
+static_assert element == 23
 
-array_max result, fives
-static_assert result == 5
-array_max result, primes
-static_assert result == 37
-array_max result, single
-static_assert result == 23
+array_max element, fives
+static_assert element == 5
+array_max element, primes
+static_assert element == 37
+array_max element, single
+static_assert element == 23
 
 array_argmin result, fives
 static_assert result == 1
@@ -1083,4 +1083,427 @@ array_purge backwards, concatenated, concatenated_none, countdown, \
             positives, primes, removing, replacing, rotating, rremoving, \
             rreplacing, single, sliced_concatenated, sliced_empty, sliced_end, \
             sliced_primes, zeros
-purge result, index, prime_11
+purge result, index, element, prime_12
+
+
+; ==============================================================================
+; String arrays, with base index 2
+; ==============================================================================
+use_array_base 2
+use_string_arrays
+
+def_array empty
+array_assert_equal empty,
+static_assert empty#len == 0
+
+def_array primes, "2", "3", "5", "7", "11", "13", "17", "19"
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19"
+static_assert primes#len == 8
+static_assert #primes$2 === "2"
+static_assert #primes$9 === "19"
+
+def_array odds
+def_array_item "1"
+def_array_item "3"
+def_array_item "5"
+def_array_item "7"
+def_array_item "9"
+array_assert_equal odds, "1", "3", "5", "7", "9"
+static_assert odds#len == 5
+static_assert #odds$2 === "1"
+static_assert #odds$6 === "9"
+
+def_array_fill zerolens, 4
+array_assert_equal zerolens, "", "", "", ""
+
+def_array_fill fives, 10, "5"
+array_assert_equal fives, "5", "5", "5", "5", "5", "5", "5", "5", "5", "5"
+
+def_array naturals, "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+def_array positives, "1", "2", "3", "4", "5", "6", "7", "8", "9"
+def_array countdown, "10", "9", "8", "7", "6", "5", "4", "3", "2", "1", "0"
+
+def_array_copy copied, primes
+array_assert_equal copied, "2", "3", "5", "7", "11", "13", "17", "19"
+static_assert copied#len == primes#len
+static_assert #copied$2 === #primes$2
+static_assert #copied$7 === #primes$7
+
+def_array_concat concatenated, primes, positives
+array_assert_equal concatenated, "2", "3", "5", "7", "11", "13", "17", "19", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+static_assert concatenated#len == primes#len + positives#len
+def_array_concat concatenated_none,
+array_assert_equal concatenated_none,
+static_assert concatenated_none#len == 0
+
+def_array_slice sliced_primes, primes, 5
+array_assert_equal sliced_primes, "7", "11", "13", "17", "19"
+def_array_slice sliced_concatenated, concatenated, 6, 14
+array_assert_equal sliced_concatenated, "11", "13", "17", "19", "1", "2", "3", "4"
+def_array_slice sliced_empty, naturals, 11, 11
+array_assert_equal sliced_empty,
+def_array_slice sliced_end, naturals, naturals#base + naturals#len
+array_assert_equal sliced_end,
+
+array_purge copied
+static_assert !def(copied#len)
+static_assert !def(copied$2)
+static_assert !def(copied$7)
+
+pushs "array_db/dw/dl string", ROM0 ; Only necessary for testing `array_db/dw/dl`.
+
+: array_db empty
+static_assert @ - :- == 0
+: array_db primes
+static_assert @ - :- == 12 ; Sum of `STRLEN` of each item of `primes`.
+
+: array_dw empty
+static_assert @ - :- == 0
+: array_dw primes
+static_assert @ - :- == 12 * 2
+
+: array_dl empty
+static_assert @ - :- == 0
+: array_dl primes
+static_assert @ - :- == 12 * 4
+
+pops
+
+array_clear odds
+array_assert_equal odds, ; Empty.
+static_assert odds#len == 0
+static_assert !def(odds$2)
+
+array_pad primes, 5
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19" ; Unchanged.
+array_pad primes, 9
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19", ""
+array_pad primes, 12, "257"
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19", "", "257", "257", "257"
+
+array_lpad primes, 10
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19", "", "257", "257", "257" ; Unchanged.
+array_lpad primes, 14
+array_assert_equal primes, "", "", "2", "3", "5", "7", "11", "13", "17", "19", "", "257", "257", "257"
+array_lpad primes, 16, "1"
+array_assert_equal primes, "1", "1", "", "", "2", "3", "5", "7", "11", "13", "17", "19", "", "257", "257", "257"
+
+print "Countdown: T-minus "
+array_print countdown
+println "... liftoff!"
+
+print "Empty: "
+array_println empty
+
+array_get prime_13, primes, 13
+static_assert #prime_13 === #primes$D
+
+array_set primes, 14, "23"
+array_set primes, 15, "29"
+array_set primes, 16, "31"
+array_set primes, 17, "37"
+array_assert_equal primes, "1", "1", "", "", "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37"
+
+array_delete primes, 4
+array_assert_equal primes, "1", "1", "", "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37"
+array_delete primes, 3
+array_assert_equal primes, "1", "", "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37"
+array_delete primes, 2
+array_assert_equal primes, "", "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37"
+array_delete primes, 2
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37"
+
+array_insert odds, 2, "3"
+array_assert_equal odds, "3"
+array_insert odds, 2, "1"
+array_assert_equal odds, "1", "3"
+array_insert odds, 4, "5", "7"
+array_assert_equal odds, "1", "3", "5", "7"
+array_insert odds, 4,
+array_assert_equal odds, "1", "3", "5", "7" ; Unchanged.
+
+array_append odds, "9"
+array_assert_equal odds, "1", "3", "5", "7", "9"
+array_append odds,
+array_assert_equal odds, "1", "3", "5", "7", "9" ; Unchanged.
+
+array_prepend odds, "-1"
+array_assert_equal odds, "-1", "1", "3", "5", "7", "9"
+array_prepend odds,
+array_assert_equal odds, "-1", "1", "3", "5", "7", "9" ; Unchanged.
+
+def_array evens, "2", "4", "6", "8", "10", "12"
+array_pop element, evens
+static_assert #element === "12"
+array_assert_equal evens, "2", "4", "6", "8", "10"
+array_pop element, evens
+static_assert #element === "10"
+array_assert_equal evens, "2", "4", "6", "8"
+
+array_assert_equal evens, "2", "4", "6", "8"
+array_shift element, evens
+static_assert #element === "2"
+array_assert_equal evens, "4", "6", "8"
+array_shift element, evens
+static_assert #element === "4"
+array_assert_equal evens, "6", "8"
+
+array_extend odds, empty, empty, empty
+array_assert_equal odds, "-1", "1", "3", "5", "7", "9" ; Unchanged.
+array_extend primes,
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37" ; Unchanged.
+array_extend primes, zerolens
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37", "", "", "", ""
+static_assert primes#len == 12 + zerolens#len
+static_assert #primes$E === #zerolens$2
+static_assert #primes$F === #zerolens$3
+static_assert #primes$10 === #zerolens$4
+static_assert #primes$11 === #zerolens$5
+
+array_slice odds, 4
+array_assert_equal odds, "3", "5", "7", "9"
+array_slice odds, odds#base, odds#base + odds#len
+array_assert_equal odds, "3", "5", "7", "9" ; Unchanged.
+array_slice primes, 2, 14
+array_assert_equal primes, "2", "3", "5", "7", "11", "13", "17", "19", "23", "29", "31", "37"
+array_slice empty, 2
+array_assert_equal empty, ; Unchanged.
+
+array_contains result, empty, "42"
+static_assert result == 0
+array_contains result, primes, "37"
+static_assert result == 1
+array_contains result, primes, "57"
+static_assert result == 0
+
+array_find index, empty, "42"
+static_assert index == empty#base - 1
+array_find index, fives, "5"
+static_assert index == 2
+array_find index, primes, "37"
+static_assert index == 13
+
+array_rfind index, empty, "42"
+static_assert index == empty#base - 1
+array_rfind index, fives, "5"
+static_assert index == 11
+array_rfind index, primes, "37"
+static_assert index == 13
+
+array_count result, empty, "42"
+static_assert result == 0
+array_count result, fives, "5"
+static_assert result == 10
+array_count result, primes, "37"
+static_assert result == 1
+
+def_array replacing, "1", "1", "2", "2", "3", "3", "4", "4", "3", "3", "2", "2", "1", "1"
+static_assert replacing#len == 14
+array_replace replacing, "4", "5"
+array_assert_equal replacing, "1", "1", "2", "2", "3", "3", "5", "5", "3", "3", "2", "2", "1", "1"
+array_replace replacing, "2", "6", 3
+array_assert_equal replacing, "1", "1", "6", "6", "3", "3", "5", "5", "3", "3", "6", "2", "1", "1"
+array_replace replacing, "9", "1"
+array_assert_equal replacing, "1", "1", "6", "6", "3", "3", "5", "5", "3", "3", "6", "2", "1", "1" ; Unchanged.
+array_replace replacing, "3", "42", 0
+array_assert_equal replacing, "1", "1", "6", "6", "3", "3", "5", "5", "3", "3", "6", "2", "1", "1" ; Unchanged.
+array_replace empty, "42", "99"
+array_assert_equal empty, ; Unchanged.
+
+def_array rreplacing, "1", "1", "2", "2", "3", "3", "4", "4", "3", "3", "2", "2", "1", "1"
+static_assert rreplacing#len == 14
+array_rreplace rreplacing, "4", "5"
+array_assert_equal rreplacing, "1", "1", "2", "2", "3", "3", "5", "5", "3", "3", "2", "2", "1", "1"
+array_rreplace rreplacing, "2", "6", 3
+array_assert_equal rreplacing, "1", "1", "2", "6", "3", "3", "5", "5", "3", "3", "6", "6", "1", "1"
+array_rreplace rreplacing, "9", "1"
+array_assert_equal rreplacing, "1", "1", "2", "6", "3", "3", "5", "5", "3", "3", "6", "6", "1", "1" ; Unchanged.
+array_rreplace rreplacing, "3", "42", 0
+array_assert_equal rreplacing, "1", "1", "2", "6", "3", "3", "5", "5", "3", "3", "6", "6", "1", "1" ; Unchanged.
+array_rreplace empty, "42", "99"
+array_assert_equal empty, ; Unchanged.
+
+def_array removing, "1", "1", "2", "2", "3", "3", "4", "4", "3", "3", "2", "2", "1", "1"
+static_assert removing#len == 14
+array_remove removing, "4"
+array_assert_equal removing, "1", "1", "2", "2", "3", "3", "3", "3", "2", "2", "1", "1"
+array_contains result, removing, "4"
+static_assert result == 0
+array_remove removing, "2", 3
+array_assert_equal removing, "1", "1", "3", "3", "3", "3", "2", "1", "1"
+array_remove removing, "9"
+array_assert_equal removing, "1", "1", "3", "3", "3", "3", "2", "1", "1" ; Unchanged.
+array_remove removing, "3", 0
+array_assert_equal removing, "1", "1", "3", "3", "3", "3", "2", "1", "1" ; Unchanged.
+array_remove empty, "42"
+array_assert_equal empty, ; Unchanged.
+
+def_array rremoving, "1", "1", "2", "2", "3", "3", "4", "4", "3", "3", "2", "2", "1", "1"
+static_assert rremoving#len == 14
+array_rremove rremoving, "4"
+array_assert_equal rremoving, "1", "1", "2", "2", "3", "3", "3", "3", "2", "2", "1", "1"
+array_contains result, rremoving, "4"
+static_assert result == 0
+array_rremove rremoving, "2", 3
+array_assert_equal rremoving, "1", "1", "2", "3", "3", "3", "3", "1", "1"
+array_rremove rremoving, "9"
+array_assert_equal rremoving, "1", "1", "2", "3", "3", "3", "3", "1", "1" ; Unchanged.
+array_rremove rremoving, "3", 0
+array_assert_equal rremoving, "1", "1", "2", "3", "3", "3", "3", "1", "1" ; Unchanged.
+array_rremove empty, "42"
+array_assert_equal empty, ; Unchanged.
+
+array_reverse primes
+array_assert_equal primes, "37", "31", "29", "23", "19", "17", "13", "11", "7", "5", "3", "2"
+array_reverse empty
+array_assert_equal empty, ; Unchanged.
+
+def_array rotating, "1", "2", "3", "4", "5"
+array_rotate rotating, 0
+array_assert_equal rotating, "1", "2", "3", "4", "5" ; Unchanged.
+array_rotate rotating, 1
+array_assert_equal rotating, "5", "1", "2", "3", "4"
+array_rotate rotating, -1
+array_assert_equal rotating, "1", "2", "3", "4", "5"
+array_rotate rotating, 2
+array_assert_equal rotating, "4", "5", "1", "2", "3"
+array_rotate rotating, -2
+array_assert_equal rotating, "1", "2", "3", "4", "5"
+array_rotate primes, 3
+array_assert_equal primes, "5", "3", "2", "37", "31", "29", "23", "19", "17", "13", "11", "7"
+array_rotate primes, -3
+array_assert_equal primes, "37", "31", "29", "23", "19", "17", "13", "11", "7", "5", "3", "2"
+array_rotate primes, 4
+array_assert_equal primes, "7", "5", "3", "2", "37", "31", "29", "23", "19", "17", "13", "11"
+array_rotate primes, -4
+array_assert_equal primes, "37", "31", "29", "23", "19", "17", "13", "11", "7", "5", "3", "2"
+array_rotate empty, 1
+array_assert_equal empty, ; Unchanged.
+array_rotate empty, -1
+array_assert_equal empty, ; Unchanged.
+
+array_sort primes
+array_assert_equal primes, "11", "13", "17", "19", "2", "23", "29", "3", "31", "37", "5", "7"
+array_sort empty
+array_assert_equal empty, ; Unchanged.
+
+array_rsort primes
+array_assert_equal primes, "7", "5", "37", "31", "3", "29", "23", "2", "19", "17", "13", "11"
+array_rsort empty
+array_assert_equal empty, ; Unchanged.
+
+array_is_sorted result, empty
+static_assert result == 1
+array_is_sorted result, primes
+static_assert result == 0
+array_sort primes
+array_is_sorted result, primes
+static_assert result == 1
+
+array_is_rsorted result, empty
+static_assert result == 1
+array_is_rsorted result, primes
+static_assert result == 0
+array_rsort primes
+array_is_rsorted result, primes
+static_assert result == 1
+
+array_is_equal result, empty,
+static_assert result == 1
+array_is_equal result, empty, "42"
+static_assert result == 0
+array_is_equal result, primes, "7", "5", "37", "31", "3", "29", "23", "2", "19", "17", "13", "11"
+static_assert result == 1
+array_is_equal result, primes, "7", "5", "37", "31", "3", "29", "23", "2", "19", "17", "13"
+static_assert result == 0
+
+array_reseed $deadbeef
+
+array_shuffle primes
+array_assert_equal primes, "23", "11", "13", "37", "2", "17", "19", "7", "5", "3", "29", "31"
+array_shuffle empty
+array_assert_equal empty, ; Unchanged.
+
+array_pick element, primes
+static_assert #element === #primes$A
+def_array single, "23"
+array_pick element, single
+static_assert #element === "23"
+
+def_array deduplicating, "1", "1", "2", "3", "3", "3", "2", "2", "1", "4", "4", "4", "4", "3", "2", "1", "1"
+array_dedup deduplicating
+array_assert_equal deduplicating, "1", "2", "3", "2", "1", "4", "3", "2", "1"
+array_dedup single
+array_assert_equal single, "23" ; Unchanged.
+array_dedup empty
+array_assert_equal empty, ; Unchanged.
+
+array_unique deduplicating
+array_assert_equal deduplicating, "1", "2", "3", "4"
+array_unique single
+array_assert_equal single, "23" ; Unchanged.
+array_unique empty
+array_assert_equal empty, ; Unchanged.
+
+array_are_all_equal result, fives
+static_assert result == 1
+array_are_all_equal result, primes
+static_assert result == 0
+array_are_all_equal result, single
+static_assert result == 1
+array_are_all_equal result, empty
+static_assert result == 1
+
+array_are_all_unique result, fives
+static_assert result == 0
+array_are_all_unique result, primes
+static_assert result == 1
+array_are_all_unique result, single
+static_assert result == 1
+array_are_all_unique result, empty
+static_assert result == 1
+
+array_min element, fives
+static_assert #element === "5"
+array_min element, primes
+static_assert #element === "11"
+array_min element, single
+static_assert #element === "23"
+
+array_max element, fives
+static_assert #element === "5"
+array_max element, primes
+static_assert #element === "7"
+array_max element, single
+static_assert #element === "23"
+
+array_argmin result, fives
+static_assert result == 2
+array_argmin result, primes
+static_assert result == 3
+array_argmin result, single
+static_assert result == 2
+
+array_argmax result, fives
+static_assert result == 2
+array_argmax result, primes
+static_assert result == 9
+array_argmax result, single
+static_assert result == 2
+
+array_sum combo, fives
+static_assert #combo === "5555555555"
+array_sum combo, primes
+static_assert #combo === "23111337217197532931"
+array_sum combo, single
+static_assert #combo === "23"
+array_sum combo, empty
+static_assert #combo === ""
+
+; Clean up previously defined arrays for the next tests.
+array_purge concatenated, concatenated_none, countdown, deduplicating, empty, \
+            evens, fives, naturals, odds, positives, primes, removing, \
+            replacing, rotating, rremoving, rreplacing, single, \
+            sliced_concatenated, sliced_empty, sliced_end, sliced_primes, \
+            zerolens
+purge result, index, element, combo, prime_13

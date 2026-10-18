@@ -47,6 +47,13 @@ MACRO? use_constant_arrays
 	def _arrays_are_constant = 1
 ENDM
 
+; Set subsequent arrays to have string items (immutable, `equs`).
+; String arrays are not compatible with functions that require numeric items
+; (`def_array_range`, `array_product`, and `array_mean`).
+MACRO? use_string_arrays
+	def _arrays_are_constant = 2
+ENDM
+
 ; Causes assembly to fail if the specified value is negative.
 ; Meant for internal use.
 MACRO? __check_non_negative_for_array ; <value> [, <value context>], <macro context>
@@ -62,7 +69,7 @@ ENDM
 ; Causes assembly to fail if the specified array is not defined.
 ; Meant for internal use.
 MACRO? __check_array_defined ; <name>, <macro context>
-	if !def(\1#base) || !def(\1#len) || !def(\1#equ)
+	if !def(\1#base) || !def(\1#len) || !def(\1#equ) || !def(\1#cmp)
 		fail "\2: Array \1 is not defined"
 	endc
 	__check_non_negative_for_array \1#base, \2
@@ -72,15 +79,49 @@ ENDM
 ; Causes assembly to fail if the specified array is already defined.
 ; Meant for internal use.
 MACRO? __check_array_undefined ; <name>, <macro context>
-	if def(\1#base) || def(\1#len) || def(\1#equ)
+	if def(\1#base) || def(\1#len) || def(\1#equ) || def(\1#cmp)
 		fail "\2: Array \1 is already defined"
+	endc
+ENDM
+
+; Causes assembly to fail if the specified array has string items.
+; Meant for internal use.
+MACRO? __check_array_strings ; <name>, <macro context>
+	if #\1#equ !== "equs" || #\1#cmp !== "=="
+		fail strfmt("\2: Array \1 is numeric, not string")
+	endc
+ENDM
+
+; Causes assembly to fail if the specified array has numeric items.
+; Meant for internal use.
+MACRO __check_array_numeric ; <name>, <macro context>
+	if #\1#equ === "equs" || #\1#cmp !== "="
+		fail strfmt("\2: Array \1 is string, not numeric")
+	endc
+ENDM
+
+; Causes assembly to fail if the specified arrays have different item types.
+; Meant for internal use.
+MACRO? __check_arrays_same ; <name>, <other>, <macro context>
+	if def(\1#cmp)
+		if #\1#cmp !== #\2#cmp
+			fail strfmt("\3: Arrays \1 and \2 have different types of items")
+		endc
+	elif _arrays_are_constant == 2
+		if #\2#cmp !== "=="
+			fail strfmt("\3: Arrays \1 and \2 have different types of items")
+		endc
+	else
+		if #\2#cmp !== "="
+			fail strfmt("\3: Arrays \1 and \2 have different types of items")
+		endc
 	endc
 ENDM
 
 ; Causes assembly to fail if the specified array is empty.
 ; Meant for internal use.
 MACRO? __check_array_nonempty ; <name>, <macro context>
-	if !def(\1#base) || !def(\1#len) || !def(\1#equ)
+	if !def(\1#base) || !def(\1#len) || !def(\1#equ) || !def(\1#cmp)
 		fail "\2: Array \1 is not defined"
 	endc
 	if \1#len == 0
@@ -112,10 +153,17 @@ MACRO? __init_array ; <name>, <length>, <macro context>
 	__check_non_negative_for_array \2, "Length", \3
 	def \1#base equ _arrays_base
 	def \1#len equ \2
-	if _arrays_are_constant
+	if _arrays_are_constant == 2
+		def \1#equ equs "equs"
+	elif _arrays_are_constant
 		def \1#equ equs "equ"
 	else
 		def \1#equ equs "="
+	endc
+	if _arrays_are_constant == 2
+		def \1#cmp equs "=="
+	else
+		def \1#cmp equs "="
 	endc
 	redef def_array_item equs "array_append \1,"
 ENDM
@@ -128,8 +176,12 @@ MACRO? array_assert_equal ; <name>, <...values>
 	endc
 	for? __argi, 2, _NARG + 1
 		def __idx = \1#base + __argi - 2
-		if \1{__idx} != (\<__argi>)
-			fail strfmt("array_assert_equal: \1{__idx} is %d, not %d", \1{__idx}, \<__argi>)
+		if #\1{__idx} !{\1#cmp} \<__argi>
+			if #\1#equ === "equs"
+				fail strfmt("array_assert_equal: \1{__idx} is \"%#s\", not \"%#s\"", #\1{__idx}, \<__argi>)
+			else
+				fail strfmt("array_assert_equal: \1{__idx} is %d, not %d", \1{__idx}, \<__argi>)
+			endc
 		endc
 	endr
 	def __idx = \1#base + \1#len
@@ -154,17 +206,19 @@ MACRO? def_array ; <name>, <...values>
 ENDM
 
 ; Defines a new array, initializing it to be filled with N of the same value,
-; or with N zeros if the value is unspecified.
+; or with N zeros (or empty strings for string arrays) if the value is unspecified.
 ; Redefines `def_array_item <...values>` to append values to this array.
-MACRO? def_array_fill ; <name>, <length> [, <value> = 0]
+MACRO? def_array_fill ; <name>, <length> [, <value> = 0/""]
 	__init_array \1, \2, def_array_fill
 	if _NARG == 3
-		def __val = \3
+		def __val {\1#equ} \3
+	elif #\1#equ === "equs"
+		redef __val equs ""
 	else
 		def __val = 0
 	endc
 	for? __idx, \1#base, \1#base + \1#len
-		redef \1{__idx} {\1#equ} __val
+		redef \1{__idx} {\1#equ} #__val
 	endr
 	purge __val, __idx
 ENDM
@@ -177,6 +231,7 @@ ENDM
 ; - `def_array_range <name>, <start>, <stop>, <step>`
 ;   gives the half-open interval [<start>, <stop>), skipping by <step>.
 ; Redefines `def_array_item <...values>` to append values to this array.
+; Not compatible with string arrays.
 MACRO? def_array_range ; <name> [, <start> = 0], <stop> [, <step> = 1]
 	if _NARG == 4
 		def __start = \2
@@ -216,9 +271,10 @@ ENDM
 MACRO? def_array_copy ; <name>, <other>
 	__check_array_defined \2, def_array_copy
 	__init_array \1, \2#len, def_array_copy
+	__check_arrays_same \1, \2, def_array_copy
 	for? __idx, \2#base, \2#base + \2#len
 		def __new = __idx + \1#base - \2#base
-		redef \1{__new} {\1#equ} \2{__idx}
+		redef \1{__new} {\1#equ} #\2{__idx}
 	endr
 	purge __idx
 	if def (__new)
@@ -235,11 +291,14 @@ MACRO? def_array_concat ; <name>, <...others>
 		def __len += \<__arr>#len
 	endr
 	__init_array \1, __len, def_array_concat
+	for? __arr, 2, _NARG + 1
+		__check_arrays_same \1, \<__arr>, def_array_concat
+	endr
 	def __num = \1#base
 	for? __arr, 2, _NARG + 1
 		for? __idx, \<__arr>#base, \<__arr>#base + \<__arr>#len
 			def __new = __idx + __num - \<__arr>#base
-			redef \1{__new} {\1#equ} \<__arr>{__idx}
+			redef \1{__new} {\1#equ} #\<__arr>{__idx}
 		endr
 		def __num += \<__arr>#len
 	endr
@@ -257,6 +316,7 @@ ENDM
 ; Redefines `def_array_item <...values>` to append values to this array.
 MACRO? def_array_slice ; <name>, <other>, <start pos> [, <end pos>]
 	__check_array_defined \2, def_array_slice
+	__check_arrays_same \1, \2, def_array_slice
 	def __start = \3
 	__check_array_pos \2, __start, def_array_slice
 	if _NARG == 4
@@ -271,7 +331,7 @@ MACRO? def_array_slice ; <name>, <other>, <start pos> [, <end pos>]
 	__init_array \1, __end - __start, def_array_slice
 	for? __idx, __start, __end
 		def __new = __idx + \1#base - __start
-		redef \1{__new} {\1#equ} \2{__idx}
+		redef \1{__new} {\1#equ} #\2{__idx}
 	endr
 	purge __start, __end, __idx
 	if def(__new)
@@ -283,7 +343,7 @@ ENDM
 MACRO? array_db ; <name>
 	__check_array_defined \1, array_db
 	for? __idx, \1#base, \1#base + \1#len
-		db \1{__idx}
+		db #\1{__idx}
 	endr
 	purge __idx
 ENDM
@@ -292,7 +352,7 @@ ENDM
 MACRO? array_dw ; <name>
 	__check_array_defined \1, array_db
 	for? __idx, \1#base, \1#base + \1#len
-		dw \1{__idx}
+		dw #\1{__idx}
 	endr
 	purge __idx
 ENDM
@@ -301,7 +361,7 @@ ENDM
 MACRO? array_dl ; <name>
 	__check_array_defined \1, array_db
 	for? __idx, \1#base, \1#base + \1#len
-		dl \1{__idx}
+		dl #\1{__idx}
 	endr
 	purge __idx
 ENDM
@@ -311,9 +371,9 @@ MACRO? array_purge ; <...names>
 	for? __arr, 1, _NARG + 1
 		__check_array_defined \<__arr>, array_purge
 		for? __idx, \<__arr>#base, \<__arr>#base + \<__arr>#len
-			purge \<__arr>{__idx}
+			purge #\<__arr>{__idx}
 		endr
-		purge \<__arr>#base, \<__arr>#len, \<__arr>#equ, __idx
+		purge \<__arr>#base, \<__arr>#len, \<__arr>#equ, \<__arr>#cmp, __idx
 		if def(def_array_item)
 			if #def_array_item === "array_append \<__arr>,"
 				purge def_array_item
@@ -327,25 +387,27 @@ ENDM
 MACRO? array_clear ; <name>
 	__check_array_defined \1, array_clear
 	for? __idx, \1#base, \1#base + \1#len
-		purge \1{__idx}
+		purge #\1{__idx}
 	endr
 	redef \1#len equ 0
 	purge __idx
 ENDM
 
 ; Pads the end of an array up to a minimum length with a given value,
-; or with 0 if the value is unspecified.
-MACRO? array_pad ; <name>, <length> [, <value> = 0]
+; or with zeros (or empty strings for string arrays) if the value is unspecified.
+MACRO? array_pad ; <name>, <length> [, <value> = 0/""]
 	__check_array_defined \1, array_pad
 	def __len = \2
 	if __len > \1#len
 		if _NARG == 3
-			def __val = \3
+			def __val {\1#equ} \3
+		elif #\1#equ === "equs"
+			redef __val equs ""
 		else
 			def __val = 0
 		endc
 		for? __idx, \1#base + \1#len, \1#base + __len
-			redef \1{__idx} {\1#equ} __val
+			redef \1{__idx} {\1#equ} #__val
 		endr
 		redef \1#len equ __len
 	endc
@@ -356,23 +418,25 @@ MACRO? array_pad ; <name>, <length> [, <value> = 0]
 ENDM
 
 ; Pads the beginning of an array up to a minimum length with a given value,
-; or with 0 if the value is unspecified.
-MACRO? array_lpad ; <name>, <length> [, <value> = 0]
+; or with zeros (or empty strings for string arrays) if the value is unspecified.
+MACRO? array_lpad ; <name>, <length> [, <value> = 0/""]
 	__check_array_defined \1, array_lpad
 	def __len = \2
 	if __len > \1#len
 		if _NARG == 3
-			def __val = \3
+			def __val {\1#equ} \3
+		elif #\1#equ === "equs"
+			redef __val equs ""
 		else
 			def __val = 0
 		endc
 		def __off = __len - \1#len
 		for? __idx, \1#base + \1#len - 1, \1#base - 1, -1
 			def __new = __idx + __off
-			redef \1{__new} {\1#equ} \1{__idx}
+			redef \1{__new} {\1#equ} #\1{__idx}
 		endr
 		for? __idx, \1#base, \1#base + __off
-			redef \1{__idx} {\1#equ} __val
+			redef \1{__idx} {\1#equ} #__val
 		endr
 		redef \1#len equ __len
 	endc
@@ -393,7 +457,7 @@ MACRO? array_print ; <name>
 		if __idx > \1#base
 			print ", "
 		endc
-		print \1{__idx}
+		print #\1{__idx}
 	endr
 	print "]"
 	purge __idx
@@ -412,7 +476,11 @@ MACRO? array_get ; <result>, <name>, <index>
 	__check_array_defined \2, array_get
 	def __idx = \3
 	__check_array_index \2, __idx, array_get
-	def \1 = \2{__idx}
+	if #\2#equ === "equs"
+		redef \1 equs #\2{__idx}
+	else
+		def \1 = \2{__idx}
+	endc
 	purge __idx
 ENDM
 
@@ -432,9 +500,9 @@ MACRO? array_delete ; <name>, <index>
 	__check_array_index \1, __del, array_delete
 	for? __new, __del, \1#base + \1#len - 1
 		def __idx = __new + 1
-		redef \1{__new} {\1#equ} \1{__idx}
+		redef \1{__new} {\1#equ} #\1{__idx}
 	endr
-	purge \1{__new}
+	purge #\1{__new}
 	redef \1#len equ \1#len - 1
 	purge __del, __new
 	if def(__idx)
@@ -449,7 +517,7 @@ MACRO? array_insert ; <name>, <index>, <...values>
 	__check_array_pos \1, __ins, array_insert
 	for? __idx, \1#base + \1#len - 1, __ins - 1, -1
 		def __new = __idx + _NARG - 2
-		redef \1{__new} {\1#equ} \1{__idx}
+		redef \1{__new} {\1#equ} #\1{__idx}
 	endr
 	for? __argi, 3, _NARG + 1
 		def __new = __ins + __argi - 3
@@ -481,7 +549,7 @@ MACRO? array_prepend ; <name>, <...values>
 	__check_array_defined \1, array_prepend
 	for? __idx, \1#base + \1#len - 1, \1#base - 1, -1
 		def __new = __idx + _NARG - 1
-		redef \1{__new} {\1#equ} \1{__idx}
+		redef \1{__new} {\1#equ} #\1{__idx}
 	endr
 	for? __argi, 2, _NARG + 1
 		def __new = \1#base + __argi - 2
@@ -498,21 +566,29 @@ ENDM
 MACRO? array_pop ; <result>, <name>
 	__check_array_nonempty \2, array_pop
 	def __idx = \2#base + \2#len - 1
-	def \1 = \2{__idx}
+	if #\2#equ === "equs"
+		redef \1 equs #\2{__idx}
+	else
+		def \1 = \2{__idx}
+	endc
 	redef \2#len equ \2#len - 1
-	purge \2{__idx}, __idx
+	purge #\2{__idx}, __idx
 ENDM
 
 ; Shifts the value from the beginning of a nonempty array.
 MACRO? array_shift ; <result>, <name>
 	__check_array_nonempty \2, array_shift
-	def \1 = \2{\2#base}
+	if #\2#equ === "equs"
+		redef \1 equs #\2{\2#base}
+	else
+		def \1 = \2{\2#base}
+	endc
 	for? __idx, \2#base, \2#base + \2#len - 1
 		def __old = __idx + 1
-		redef \2{__idx} {\2#equ} \2{__old}
+		redef \2{__idx} {\2#equ} #\2{__old}
 	endr
 	redef \2#len equ \2#len - 1
-	purge \2{__idx}, __idx
+	purge #\2{__idx}, __idx
 	if def(__old)
 		purge __old
 	endc
@@ -523,9 +599,10 @@ MACRO? array_extend ; <name>, <...others>
 	__check_array_defined \1, array_extend
 	for? __arr, 2, _NARG + 1
 		__check_array_defined \<__arr>, array_extend
+		__check_arrays_same \1, \<__arr>, array_extend
 		for? __idx, \<__arr>#base, \<__arr>#base + \<__arr>#len
 			def __new = __idx + \1#base + \1#len - \<__arr>#base
-			redef \1{__new} {\1#equ} \<__arr>{__idx}
+			redef \1{__new} {\1#equ} #\<__arr>{__idx}
 		endr
 		redef \1#len equ \1#len + \<__arr>#len
 	endr
@@ -555,10 +632,10 @@ MACRO? array_slice ; <name>, <start pos> [, <end pos>]
 	endc
 	for? __idx, __start, __end
 		def __new = __idx + \1#base - __start
-		redef \1{__new} {\1#equ} \1{__idx}
+		redef \1{__new} {\1#equ} #\1{__idx}
 	endr
 	for? __idx, __end + \1#base - __start, \1#base + \1#len
-		purge \1{__idx}
+		purge #\1{__idx}
 	endr
 	redef \1#len equ __end - __start
 	purge __start, __end, __idx
@@ -572,9 +649,13 @@ ENDM
 MACRO? array_contains ; <result>, <name>, <value>
 	__check_array_defined \2, array_contains
 	def \1 = 0
-	def __val = \3
+	if #\2#equ === "equs"
+		redef __val equs \3
+	else
+		def __val = \3
+	endc
 	for? __idx, \2#base, \2#base + \2#len
-		if \2{__idx} == __val
+		if #\2{__idx} ={\2#cmp} #__val
 			def \1 = 1
 			break
 		endc
@@ -587,9 +668,13 @@ ENDM
 MACRO? array_find ; <result>, <name>, <value>
 	__check_array_defined \2, array_find
 	def \1 = \2#base - 1
-	def __val = \3
+	if #\2#equ === "equs"
+		redef __val equs \3
+	else
+		def __val = \3
+	endc
 	for? __idx, \2#base, \2#base + \2#len
-		if \2{__idx} == __val
+		if #\2{__idx} ={\2#cmp} #__val
 			def \1 = __idx
 			break
 		endc
@@ -602,9 +687,13 @@ ENDM
 MACRO? array_rfind ; <result>, <name>, <value>
 	__check_array_defined \2, array_rfind
 	def \1 = \2#base - 1
-	def __val = \3
+	if #\2#equ === "equs"
+		redef __val equs \3
+	else
+		def __val = \3
+	endc
 	for? __idx, \2#base + \2#len - 1, \2#base - 1, -1
-		if \2{__idx} == __val
+		if #\2{__idx} ={\2#cmp} #__val
 			def \1 = __idx
 			break
 		endc
@@ -616,9 +705,13 @@ ENDM
 MACRO? array_count ; <result>, <name>, <value>
 	__check_array_defined \2, array_count
 	def \1 = 0
-	def __val = \3
+	if #\2#equ === "equs"
+		redef __val equs \3
+	else
+		def __val = \3
+	endc
 	for? __idx, \2#base, \2#base + \2#len
-		if \2{__idx} == __val
+		if #\2{__idx} ={\2#cmp} #__val
 			def \1 += 1
 		endc
 	endr
@@ -629,8 +722,13 @@ ENDM
 ; or replace all of them if N is unspecified.
 MACRO? array_replace ; <name>, <old>, <new> [, <limit>]
 	__check_array_defined \1, array_replace
-	def __old = \2
-	def __new = \3
+	if #\1#equ === "equs"
+		redef __old equs \2
+		redef __new equs \3
+	else
+		def __old = \2
+		def __new = \3
+	endc
 	if _NARG == 4
 		def __limit = \4
 		__check_non_negative_for_array __limit, "Limit", array_replace
@@ -639,8 +737,8 @@ MACRO? array_replace ; <name>, <old>, <new> [, <limit>]
 	endc
 	def __num = 0
 	for? __idx, \1#base, \1#base + \1#len
-		if \1{__idx} == __old && __num < __limit
-			redef \1{__idx} {\1#equ} __new
+		if #\1{__idx} ={\1#cmp} #__old && __num < __limit
+			redef \1{__idx} {\1#equ} #__new
 			def __num += 1
 			if __num == __limit
 				break
@@ -654,8 +752,13 @@ ENDM
 ; or replace all of them if N is unspecified.
 MACRO? array_rreplace ; <name>, <old>, <new> [, <limit>]
 	__check_array_defined \1, array_rreplace
-	def __old = \2
-	def __new = \3
+	if #\1#equ === "equs"
+		redef __old equs \2
+		redef __new equs \3
+	else
+		def __old = \2
+		def __new = \3
+	endc
 	if _NARG == 4
 		def __limit = \4
 		__check_non_negative_for_array __limit, "Limit", array_rreplace
@@ -664,8 +767,8 @@ MACRO? array_rreplace ; <name>, <old>, <new> [, <limit>]
 	endc
 	def __num = 0
 	for? __idx, \1#base + \1#len - 1, \1#base - 1, -1
-		if \1{__idx} == __old && __num < __limit
-			redef \1{__idx} {\1#equ} __new
+		if #\1{__idx} ={\1#cmp} #__old && __num < __limit
+			redef \1{__idx} {\1#equ} #__new
 			def __num += 1
 			if __num == __limit
 				break
@@ -679,7 +782,11 @@ ENDM
 ; or remove all of them if N is unspecified.
 MACRO? array_remove ; <name>, <value> [, <limit>]
 	__check_array_defined \1, array_remove
-	def __val = \2
+	if #\1#equ === "equs"
+		redef __val equs \2
+	else
+		def __val = \2
+	endc
 	if _NARG == 3
 		def __limit = \3
 		__check_non_negative_for_array __limit, "Limit", array_remove
@@ -688,15 +795,15 @@ MACRO? array_remove ; <name>, <value> [, <limit>]
 	endc
 	def __num = 0
 	for? __idx, \1#base, \1#base + \1#len
-		if \1{__idx} == __val && __num < __limit
+		if #\1{__idx} ={\1#cmp} #__val && __num < __limit
 			def __num += 1
 		elif __num > 0
 			def __new = __idx - __num
-			redef \1{__new} {\1#equ} \1{__idx}
+			redef \1{__new} {\1#equ} #\1{__idx}
 		endc
 	endr
 	for? __idx, \1#base + \1#len - __num, \1#base + \1#len
-		purge \1{__idx}
+		purge #\1{__idx}
 	endr
 	redef \1#len equ \1#len - __num
 	purge __val, __limit, __num, __idx
@@ -709,7 +816,11 @@ ENDM
 ; or remove all of them if N is unspecified.
 MACRO? array_rremove ; <name>, <value> [, <limit>]
 	__check_array_defined \1, array_rremove
-	def __val = \2
+	if #\1#equ === "equs"
+		redef __val equs \2
+	else
+		def __val = \2
+	endc
 	if _NARG == 3
 		def __limit = \3
 		__check_non_negative_for_array __limit, "Limit", array_rremove
@@ -718,12 +829,12 @@ MACRO? array_rremove ; <name>, <value> [, <limit>]
 	endc
 	def __num = 0
 	for? __idx, \1#base + \1#len - 1, \1#base - 1, -1
-		if \1{__idx} == __val && __num < __limit
+		if #\1{__idx} ={\1#cmp} #__val && __num < __limit
 			for? __new, __idx, \1#base + \1#len - 1
 				def __del = __new + 1
-				redef \1{__new} {\1#equ} \1{__del}
+				redef \1{__new} {\1#equ} #\1{__del}
 			endr
-			purge \1{__new}
+			purge #\1{__new}
 			redef \1#len equ \1#len - 1
 			def __num += 1
 			if __num == __limit
@@ -746,9 +857,13 @@ MACRO? array_reverse ; <name>
 	for? __off, \1#len / 2
 		def __i = \1#base + __off
 		def __j = \1#base + \1#len - __off - 1
-		def __tmp = \1{__i}
-		redef \1{__i} {\1#equ} \1{__j}
-		redef \1{__j} {\1#equ} __tmp
+		if #\1#equ === "equs"
+			redef __tmp equs #\1{__i}
+		else
+			def __tmp = \1{__i}
+		endc
+		redef \1{__i} {\1#equ} #\1{__j}
+		redef \1{__j} {\1#equ} #__tmp
 	endr
 	purge __off
 	if def(__i)
@@ -762,9 +877,13 @@ MACRO? _reverse_array_slice ; <name>, <start>, <end>
 	def __start = \2
 	def __end = \3
 	rept? (__end - __start + 1) / 2
-		def __tmp = \1{__start}
-		redef \1{__start} {\1#equ} \1{__end}
-		redef \1{__end} {\1#equ} __tmp
+		if #\1#equ === "equs"
+			redef __tmp equs #\1{__start}
+		else
+			def __tmp = \1{__start}
+		endc
+		redef \1{__start} {\1#equ} #\1{__end}
+		redef \1{__end} {\1#equ} #__tmp
 		def __start += 1
 		def __end -= 1
 	endr
@@ -811,6 +930,7 @@ MACRO? __sort_array ; <name>, <operator>, <macro context>
 			def __max += 1
 		endc
 	endr
+	def __str = #\1#equ === "equs"
 	for? __p, __max
 		def __w = 2 ** __p
 		for? __i, \1#base, __cap, 2 * __w
@@ -824,34 +944,58 @@ MACRO? __sort_array ; <name>, <operator>, <macro context>
 			if __r2 >= __cap
 				def __r2 = __cap - 1
 			endc
-			for? __t, \1#len
-				if __l1 > __r1 || __l2 > __r2
-					break
-				endc
-				if \1{__l1} \2 \1{__l2}
-					def __tmp{u:__t} = \1{__l1}
-					def __l1 += 1
-				else
-					def __tmp{u:__t} = \1{__l2}
-					def __l2 += 1
-				endc
-			endr
-			for? __j, __l1, __r1 + 1
-				def __tmp{u:__t} = \1{__j}
-				def __t += 1
-			endr
-			for? __j, __l2, __r2 + 1
-				def __tmp{u:__t} = \1{__j}
-				def __t += 1
-			endr
+			if __str
+				for? __t, \1#len
+					if __l1 > __r1 || __l2 > __r2
+						break
+					endc
+					def __cmp = strcmp(#\1{__l1}, #\1{__l2})
+					if __cmp \2 0
+						redef __tmp{__t} equs #\1{__l1}
+						def __l1 += 1
+					else
+						redef __tmp{__t} equs #\1{__l2}
+						def __l2 += 1
+					endc
+				endr
+				for? __j, __l1, __r1 + 1
+					redef __tmp{__t} equs #\1{__j}
+					def __t += 1
+				endr
+				for? __j, __l2, __r2 + 1
+					redef __tmp{__t} equs #\1{__j}
+					def __t += 1
+				endr
+			else
+				for? __t, \1#len
+					if __l1 > __r1 || __l2 > __r2
+						break
+					endc
+					if \1{__l1} \2 \1{__l2}
+						def __tmp{__t} = \1{__l1}
+						def __l1 += 1
+					else
+						def __tmp{__t} = \1{__l2}
+						def __l2 += 1
+					endc
+				endr
+				for? __j, __l1, __r1 + 1
+					def __tmp{__t} = \1{__j}
+					def __t += 1
+				endr
+				for? __j, __l2, __r2 + 1
+					def __tmp{__t} = \1{__j}
+					def __t += 1
+				endr
+			endc
 			for? __j, __t
 				def __k = __i + __j
-				redef \1{__k} {\1#equ} __tmp{u:__j}
-				purge __tmp{u:__j}
+				redef \1{__k} {\1#equ} #__tmp{__j}
+				purge __tmp{__j}
 			endr
 		endr
 	endr
-	purge __cap, __p, __max
+	purge __cap, __p, __max, __str
 	if def(__w)
 		purge __w, __i
 		if def(__l1)
@@ -878,17 +1022,25 @@ MACRO? array_is_sorted ; <result>, <name>
 	__check_array_defined \2, array_is_sorted
 	def \1 = 1
 	if \2#len > 1
-		def __prev = \2{\2#base}
+		def __prev = \2#base
 		for? __idx, \2#base + 1, \2#base + \2#len
-			if \2{__idx} < __prev
+			if #\2#equ === "equs"
+				def __cmp = strcmp(#\2{__idx}, #\2{__prev}) < 0
+			else
+				def __cmp = \2{__idx} < \2{__prev}
+			endc
+			if __cmp
 				def \1 = 0
 				break
 			endc
-			def __prev = \2{__idx}
+			def __prev = __idx
 		endr
 	endc
 	if def(__prev)
 		purge __prev, __idx
+		if def(__cmp)
+			purge __cmp
+		endc
 	endc
 ENDM
 
@@ -898,17 +1050,25 @@ MACRO? array_is_rsorted ; <result>, <name>
 	__check_array_defined \2, array_is_rsorted
 	def \1 = 1
 	if \2#len > 1
-		def __prev = \2{\2#base}
+		def __prev = \2#base
 		for? __idx, \2#base + 1, \2#base + \2#len
-			if \2{__idx} > __prev
+			if #\2#equ === "equs"
+				def __cmp = strcmp(#\2{__idx}, #\2{__prev}) > 0
+			else
+				def __cmp = \2{__idx} > \2{__prev}
+			endc
+			if __cmp
 				def \1 = 0
 				break
 			endc
-			def __prev = \2{__idx}
+			def __prev = __idx
 		endr
 	endc
 	if def(__prev)
 		purge __prev, __idx
+		if def(__cmp)
+			purge __cmp
+		endc
 	endc
 ENDM
 
@@ -922,7 +1082,7 @@ MACRO? array_is_equal ; <result>, <name>, <...values>
 	else
 		for? __argi, 3, _NARG + 1
 			def __idx = \2#base + __argi - 3
-			if \2{__idx} != (\<__argi>)
+			if #\2{__idx} !{\2#cmp} \<__argi>
 				def \1 = 0
 				break
 			endc
@@ -968,9 +1128,13 @@ MACRO? array_shuffle ; <name>
 			__next_array_prng
 			def __j = \1#base + _arrays_prng % (__i + 1)
 			def __i += \1#base
-			def __tmp = \1{__i}
-			redef \1{__i} {\1#equ} \1{__j}
-			redef \1{__j} {\1#equ} __tmp
+			if #\1#equ === "equs"
+				redef __tmp equs #\1{__i}
+			else
+				def __tmp = \1{__i}
+			endc
+			redef \1{__i} {\1#equ} #\1{__j}
+			redef \1{__j} {\1#equ} #__tmp
 		endr
 		purge __i
 		if def(__j)
@@ -984,7 +1148,11 @@ MACRO? array_pick ; <result>, <name>
 	__check_array_nonempty \2, array_pick
 	__next_array_prng
 	def __idx = \2#base + _arrays_prng % \2#len
-	def \1 = \2{__idx}
+	if #\2#equ === "equs"
+		redef \1 equs #\2{__idx}
+	else
+		def \1 = \2{__idx}
+	endc
 	purge __idx
 ENDM
 
@@ -995,15 +1163,15 @@ MACRO? array_dedup ; <name>
 		def __num = 0
 		for? __idx, \1#base + 1, \1#base + \1#len
 			def __old = __idx - __num - 1
-			if \1{__idx} == \1{__old}
+			if #\1{__idx} ={\1#cmp} #\1{__old}
 				def __num += 1
 			elif __num > 0
 				def __new = __idx - __num
-				redef \1{__new} {\1#equ} \1{__idx}
+				redef \1{__new} {\1#equ} #\1{__idx}
 			endc
 		endr
 		for? __idx, \1#base + \1#len - __num, \1#base + \1#len
-			purge \1{__idx}
+			purge #\1{__idx}
 		endr
 		redef \1#len equ \1#len - __num
 		purge __num, __idx
@@ -1025,7 +1193,7 @@ MACRO? array_unique ; <name>
 		for? __idx, \1#base + 1, \1#base + \1#len
 			def __dup = 0
 			for? __pre, \1#base, __idx
-				if \1{__pre} == \1{__idx}
+				if #\1{__pre} ={\1#cmp} #\1{__idx}
 					def __dup = 1
 					break
 				endc
@@ -1034,11 +1202,11 @@ MACRO? array_unique ; <name>
 				def __num += 1
 			elif __num > 0
 				def __new = __idx - __num
-				redef \1{__new} {\1#equ} \1{__idx}
+				redef \1{__new} {\1#equ} #\1{__idx}
 			endc
 		endr
 		for? __idx, \1#base + \1#len - __num, \1#base + \1#len
-			purge \1{__idx}
+			purge #\1{__idx}
 		endr
 		redef \1#len equ \1#len - __num
 		purge __num, __idx
@@ -1057,16 +1225,16 @@ MACRO? array_are_all_equal ; <result>, <name>
 	__check_array_defined \2, array_are_all_equal
 	def \1 = 1
 	if \2#len > 1
-		def __val = \2{\2#base}
+		def __num = \2#base
 		for? __idx, \2#base + 1, \2#base + \2#len
-			if \2{__idx} != __val
+			if #\2{__idx} !{\2#cmp} #\2{__num}
 				def \1 = 0
 				break
 			endc
 		endr
 	endc
-	if def (__val)
-		purge __val, __idx
+	if def (__num)
+		purge __num, __idx
 	endc
 ENDM
 
@@ -1078,7 +1246,7 @@ MACRO? array_are_all_unique ; <result>, <name>
 	if \2#len > 1
 		for? __i, \2#base, \2#base + \2#len
 			for? __j, __i + 1, \2#base + \2#len
-				if \2{__i} == \2{__j}
+				if #\2{__i} ={\2#cmp} #\2{__j}
 					def \1 = 0
 					break
 				endc
@@ -1096,12 +1264,21 @@ ENDM
 ; Find the minimum value in a nonempty array.
 MACRO? array_min ; <result>, <name>
 	__check_array_nonempty \2, array_min
-	def \1 = \2{\2#base}
-	for? __idx, \2#base, \2#base + \2#len
-		if \2{__idx} < \1
-			def \1 = \2{__idx}
-		endc
-	endr
+	if #\2#equ === "equs"
+		redef \1 equs #\2{\2#base}
+		for? __idx, \2#base, \2#base + \2#len
+			if strcmp(#\2{__idx}, #\1) < 0
+				redef \1 equs #\2{__idx}
+			endc
+		endr
+	else
+		def \1 = \2{\2#base}
+		for? __idx, \2#base, \2#base + \2#len
+			if \2{__idx} < \1
+				def \1 = \2{__idx}
+			endc
+		endr
+	endc
 	if def(__idx)
 		purge __idx
 	endc
@@ -1110,12 +1287,21 @@ ENDM
 ; Find the maximum value in a nonempty array.
 MACRO? array_max ; <result>, <name>
 	__check_array_nonempty \2, array_max
-	def \1 = \2{\2#base}
-	for? __idx, \2#base, \2#base + \2#len
-		if \2{__idx} > \1
-			def \1 = \2{__idx}
-		endc
-	endr
+	if #\2#equ === "equs"
+		redef \1 equs #\2{\2#base}
+		for? __idx, \2#base, \2#base + \2#len
+			if strcmp(#\2{__idx}, #\1) > 0
+				redef \1 equs #\2{__idx}
+			endc
+		endr
+	else
+		def \1 = \2{\2#base}
+		for? __idx, \2#base, \2#base + \2#len
+			if \2{__idx} > \1
+				def \1 = \2{__idx}
+			endc
+		endr
+	endc
 	if def(__idx)
 		purge __idx
 	endc
@@ -1125,11 +1311,19 @@ ENDM
 MACRO? array_argmin ; <result>, <name>
 	__check_array_nonempty \2, array_argmin
 	def \1 = \2#base
-	for? __idx, \2#base, \2#base + \2#len
-		if \2{__idx} < \2{\1}
-			def \1 = __idx
-		endc
-	endr
+	if #\2#equ === "equs"
+		for? __idx, \2#base, \2#base + \2#len
+			if strcmp(#\2{__idx}, #\2{\1}) < 0
+				def \1 = __idx
+			endc
+		endr
+	else
+		for? __idx, \2#base, \2#base + \2#len
+			if \2{__idx} < \2{\1}
+				def \1 = __idx
+			endc
+		endr
+	endc
 	if def(__idx)
 		purge __idx
 	endc
@@ -1139,33 +1333,52 @@ ENDM
 MACRO? array_argmax ; <result>, <name>
 	__check_array_nonempty \2, array_argmax
 	def \1 = \2#base
-	for? __idx, \2#base, \2#base + \2#len
-		if \2{__idx} > \2{\1}
-			def \1 = __idx
-		endc
-	endr
+	if #\2#equ === "equs"
+		for? __idx, \2#base, \2#base + \2#len
+			if strcmp(#\2{__idx}, #\2{\1}) > 0
+				def \1 = __idx
+			endc
+		endr
+	else
+		for? __idx, \2#base, \2#base + \2#len
+			if \2{__idx} > \2{\1}
+				def \1 = __idx
+			endc
+		endr
+	endc
 	if def(__idx)
 		purge __idx
 	endc
 ENDM
 
-; Find the sum of values in an array,
+; Take the sum of values in an array,
 ; or 0 if the array is empty.
+; For string arrays, take the concatenation of values,
+; or "" if the array is empty.
 MACRO? array_sum ; <result>, <name>
 	__check_array_defined \2, array_sum
-	def \1 = 0
-	for? __idx, \2#base, \2#base + \2#len
-		def \1 += \2{__idx}
-	endr
+	if #\2#equ === "equs"
+		redef \1 equs ""
+		for? __idx, \2#base, \2#base + \2#len
+			redef \1 equs #\1 ++ #\2{__idx}
+		endr
+	else
+		def \1 = 0
+		for? __idx, \2#base, \2#base + \2#len
+			def \1 += \2{__idx}
+		endr
+	endc
 	if def(__idx)
 		purge __idx
 	endc
 ENDM
 
-; Find the product of values in an array,
+; Take the product of values in an array,
 ; or 1 if the array is empty.
+; Not compatible with string arrays.
 MACRO? array_product ; <result>, <name>
 	__check_array_defined \2, array_product
+	__check_array_numeric \2, array_product
 	def \1 = 1
 	for? __idx, \2#base, \2#base + \2#len
 		def \1 *= \2{__idx}
@@ -1175,9 +1388,11 @@ MACRO? array_product ; <result>, <name>
 	endc
 ENDM
 
-; Find the mean (average) of values in a nonempty array.
+; Take the mean (average) of values in a nonempty array.
+; Not compatible with string arrays.
 MACRO? array_mean ; <result>, <name>
 	__check_array_nonempty \2, array_mean
+	__check_array_numeric \2, array_mean
 	def \1 = 0
 	for? __idx, \2#base, \2#base + \2#len
 		def \1 += \2{__idx}
