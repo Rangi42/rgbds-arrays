@@ -5,7 +5,7 @@ INCLUDE "arrays.inc"
 ; check_arrays_inc_min_version <major>[.<minor>]
 ; Check whether this library version meets a minimum required one.
 check_arrays_inc_min_version 1
-check_arrays_inc_min_version 1.3
+check_arrays_inc_min_version 1.4
 
 ; Verify the expected default configuration.
 static_assert _arrays_base == 0 && _arrays_are_constant == 0

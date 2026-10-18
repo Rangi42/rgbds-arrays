@@ -9,4 +9,4 @@ def _arrays_prng = $637a51d3
 def ARRAYS_INC equ $1
 
 ; String constants
-def ARRAYS_VERSION equs "1.3"
+def ARRAYS_VERSION equs "1.4"
