@@ -320,7 +320,7 @@ Not compatible with string arrays.
 Take the mean (average) of values in a nonempty array.
 Not compatible with string arrays.
 
-### <code>array_join <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i> [, <i>&lt;sep&gt;</i> = 0/""]</code>
+### <code>array_join <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i> [, <i>&lt;sep&gt;</i> = ""]</code>
 
 Concatenate the string values in an array,
 interspersed with a separator if one is specified.

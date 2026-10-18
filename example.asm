@@ -1503,6 +1503,10 @@ static_assert result == 9
 array_argmax result, single
 static_assert result == 2
 
+; array_join <result>, <name> [, <sep> = ""]
+; Concatenate the string values in an array,
+; interspersed with a separator if one is specified.
+; Not compatible with numeric arrays.
 array_join joined, fives
 static_assert #joined === "5555555555"
 array_join joined, primes, "-"
