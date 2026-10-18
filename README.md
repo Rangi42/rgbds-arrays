@@ -49,7 +49,7 @@ There are dozens of potentially-useful macros, so they're broken into categories
    [`use_variable_arrays`](#use_variable_arrays),
    [`use_constant_arrays`](#use_constant_arrays),
    [`use_string_arrays`](#use_string_arrays)
-2. **[Definition](#2.definition):**
+2. **[Definition](#2-definition):**
    [`def_array`](#def_array-name-values),
    [`def_array_fill`](#def_array_fill-name-length--value--0),
    [`def_array_range`](#def_array_range-name--start--0-stop--step--1),
