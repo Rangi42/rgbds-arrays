@@ -305,8 +305,7 @@ Find the index of a maximum value in a nonempty array.
 
 Take the sum of values in an array,
 or 0 if the array is empty.
-For string arrays, take the concatenation of values,
-or "" if the array is empty.
+Not compatible with string arrays.
 
 ### <code>array_product <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
@@ -318,3 +317,9 @@ Not compatible with string arrays.
 
 Take the mean (average) of values in a nonempty array.
 Not compatible with string arrays.
+
+### <code>array_join <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i> [, <i>&lt;sep&gt;</i> = 0/""]</code>
+
+Concatenate the string values in an array,
+interspersed with a separator if one is specified.
+Not compatible with numeric arrays.

@@ -1353,21 +1353,14 @@ ENDM
 
 ; Take the sum of values in an array,
 ; or 0 if the array is empty.
-; For string arrays, take the concatenation of values,
-; or "" if the array is empty.
+; Not compatible with string arrays.
 MACRO? array_sum ; <result>, <name>
 	__check_array_defined \2, array_sum
-	if #\2#equ === "equs"
-		redef \1 equs ""
-		for? __idx, \2#base, \2#base + \2#len
-			redef \1 equs #\1 ++ #\2{__idx}
-		endr
-	else
-		def \1 = 0
-		for? __idx, \2#base, \2#base + \2#len
-			def \1 += \2{__idx}
-		endr
-	endc
+	__check_array_numeric \2, array_sum
+	def \1 = 0
+	for? __idx, \2#base, \2#base + \2#len
+		def \1 += \2{__idx}
+	endr
 	if def(__idx)
 		purge __idx
 	endc
@@ -1398,6 +1391,29 @@ MACRO? array_mean ; <result>, <name>
 		def \1 += \2{__idx}
 	endr
 	def \1 /= \2#len
+	if def(__idx)
+		purge __idx
+	endc
+ENDM
+
+; Concatenate the string values in an array,
+; interspersed with a separator if one is specified.
+; Not compatible with numeric arrays.
+MACRO? array_join ; <result>, <name> [, <sep> = ""]
+	__check_array_strings \2, array_join
+	redef \1 equs ""
+	if _NARG == 3
+		redef __sep equs \3
+	else
+		redef __sep equs ""
+	endc
+	for? __idx, \2#base, \2#base + \2#len
+		if __idx > \2#base
+			redef \1 equs #\1 ++ #__sep
+		endc
+		redef \1 equs #\1 ++ #\2{__idx}
+	endr
+	purge __sep
 	if def(__idx)
 		purge __idx
 	endc

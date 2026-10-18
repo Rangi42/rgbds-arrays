@@ -594,8 +594,7 @@ static_assert result == 0
 ; array_sum <result>, <name>
 ; Take the sum of values in an array,
 ; or 0 if the array is empty.
-; For string arrays, take the concatenation of values,
-; or "" if the array is empty.
+; Not compatible with string arrays.
 array_sum result, fives
 static_assert result == 50
 array_sum result, primes
@@ -1491,14 +1490,14 @@ static_assert result == 9
 array_argmax result, single
 static_assert result == 2
 
-array_sum combo, fives
-static_assert #combo === "5555555555"
-array_sum combo, primes
-static_assert #combo === "23111337217197532931"
-array_sum combo, single
-static_assert #combo === "23"
-array_sum combo, empty
-static_assert #combo === ""
+array_join joined, fives
+static_assert #joined === "5555555555"
+array_join joined, primes, "-"
+static_assert #joined === "23-11-13-37-2-17-19-7-5-3-29-31"
+array_join joined, single, "+"
+static_assert #joined === "23"
+array_join joined, empty, "..."
+static_assert #joined === ""
 
 ; Clean up previously defined arrays for the next tests.
 array_purge concatenated, concatenated_none, countdown, deduplicating, empty, \
@@ -1506,4 +1505,4 @@ array_purge concatenated, concatenated_none, countdown, deduplicating, empty, \
             replacing, rotating, rremoving, rreplacing, single, \
             sliced_concatenated, sliced_empty, sliced_end, sliced_primes, \
             zerolens
-purge result, index, element, combo, prime_13
+purge result, index, element, joined, prime_13

@@ -3,6 +3,6 @@ warning: def_array_range: empty_range goes backwards from 5 to 5 by 1 [-Wuser]
 warning: def_array_range: backwards goes backwards from 1 to 5 by -1 [-Wuser]
     at example.asm(99)
 warning: def_array_range: empty_range goes backwards from 5 to 5 by 1 [-Wuser]
-    at example.asm(682)
+    at example.asm(681)
 warning: def_array_range: backwards goes backwards from 1 to 5 by -1 [-Wuser]
-    at example.asm(685)
+    at example.asm(684)
