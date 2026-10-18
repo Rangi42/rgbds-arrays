@@ -314,6 +314,11 @@ MACRO? array_purge ; <...names>
 			purge \<__arr>{__idx}
 		endr
 		purge \<__arr>#base, \<__arr>#len, \<__arr>#equ, __idx
+		if def(def_array_item)
+			if #def_array_item === "array_append \<__arr>,"
+				purge def_array_item
+			endc
+		endc
 	endr
 	purge __arr
 ENDM
