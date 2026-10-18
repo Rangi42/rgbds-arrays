@@ -941,7 +941,7 @@ def _arrays_prng = ((((__UTC_SECOND__ * 60 + __UTC_MINUTE__) * 60 + __UTC_HOUR__
                      __UTC_DAY__ - 1) * 31 + __UTC_MONTH__ - 1) * 12 + __UTC_YEAR__ % 100
 
 ; Reseed the xorshift32 PRNG used in randomized array macros
-; (array_shuffle and array_pick).
+; (`array_shuffle` and `array_pick`).
 ; The seed cannot be zero, since that would only generate more zeros.
 MACRO? array_reseed ; <seed>
 	if (\1) == 0

@@ -18,6 +18,9 @@ if ! diff -au --strip-trailing-cr .github/example.err "$ERRFILE"; then
 fi
 
 if ! diff -au --strip-trailing-cr .github/example.dump.asm "$STATEFILE"; then
-  echo "Unexpected state file output! (Unpurged internal temporary symbols?)" >&2
+  echo "Unexpected state file output!" >&2
+  if grep -E "^def __" "$STATEFILE"; then
+    echo "Unpurged internal temporary symbols!" >&2
+  fi
   exit 1
 fi

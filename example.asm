@@ -313,7 +313,7 @@ static_assert result == 0
 ; Find the first index of a value in an array,
 ; or base - 1 if the value is not in the array.
 array_find index, empty, 42
-static_assert index == -1
+static_assert index == empty#base - 1
 array_find index, fives, 5
 static_assert index == 0
 array_find index, primes, 37
@@ -323,7 +323,7 @@ static_assert index == 11
 ; Find the last index of a value in an array,
 ; or base - 1 if the value is not in the array.
 array_rfind index, empty, 42
-static_assert index == -1
+static_assert index == empty#base - 1
 array_rfind index, fives, 5
 static_assert index == 9
 array_rfind index, primes, 37
@@ -635,7 +635,7 @@ purge result, index, prime_11
 ; ==============================================================================
 ; Constant arrays, with base index 1
 ; ==============================================================================
-use_array_base 0
+use_array_base 1
 use_constant_arrays
 
 def_array empty
@@ -645,8 +645,8 @@ static_assert empty#len == 0
 def_array primes, 2, 3, 5, 7, 11, 13, 17, 19
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19
 static_assert primes#len == 8
-static_assert primes$0 == 2
-static_assert primes$7 == 19
+static_assert primes$1 == 2
+static_assert primes$8 == 19
 
 def_array odds
 def_array_item 1
@@ -656,8 +656,8 @@ def_array_item 7
 def_array_item 9
 array_assert_equal odds, 1, 3, 5, 7, 9
 static_assert odds#len == 5
-static_assert odds$0 == 1
-static_assert odds$4 == 9
+static_assert odds$1 == 1
+static_assert odds$5 == 9
 
 def_array_fill zeros, 4
 array_assert_equal zeros, 0, 0, 0, 0
@@ -674,8 +674,8 @@ array_assert_equal positives, 1, 2, 3, 4, 5, 6, 7, 8, 9
 def_array_range countdown, 10, -1, -1
 array_assert_equal countdown, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 static_assert countdown#len == 11
-static_assert countdown$0 == 10
-static_assert countdown$A == 0
+static_assert countdown$1 == 10
+static_assert countdown$B == 0
 
 def_array_range empty_range, 5, 5 ; This should print a warning.
 static_assert empty_range#len == 0
@@ -686,8 +686,8 @@ static_assert backwards#len == 0
 def_array_copy copied, primes
 array_assert_equal copied, 2, 3, 5, 7, 11, 13, 17, 19
 static_assert copied#len == primes#len
-static_assert copied$0 == primes$0
-static_assert copied$5 == primes$5
+static_assert copied$1 == primes$1
+static_assert copied$6 == primes$6
 
 def_array_concat concatenated, primes, positives
 array_assert_equal concatenated, 2, 3, 5, 7, 11, 13, 17, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -696,11 +696,11 @@ def_array_concat concatenated_none,
 array_assert_equal concatenated_none,
 static_assert concatenated_none#len == 0
 
-def_array_slice sliced_primes, primes, 3
+def_array_slice sliced_primes, primes, 4
 array_assert_equal sliced_primes, 7, 11, 13, 17, 19
-def_array_slice sliced_concatenated, concatenated, 4, 12
+def_array_slice sliced_concatenated, concatenated, 5, 13
 array_assert_equal sliced_concatenated, 11, 13, 17, 19, 1, 2, 3, 4
-def_array_slice sliced_empty, naturals, 9, 9
+def_array_slice sliced_empty, naturals, 10, 10
 array_assert_equal sliced_empty,
 def_array_slice sliced_end, naturals, naturals#base + naturals#len
 array_assert_equal sliced_end,
@@ -758,30 +758,30 @@ array_println empty
 array_get prime_11, primes, 11
 static_assert prime_11 == primes$B
 
-array_set primes, 12, 23
-array_set primes, 13, 29
-array_set primes, 14, 31
-array_set primes, 15, 37
+array_set primes, 13, 23
+array_set primes, 14, 29
+array_set primes, 15, 31
+array_set primes, 16, 37
 array_assert_equal primes, 1, 1, 0, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
 
-array_delete primes, 2
+array_delete primes, 3
 array_assert_equal primes, 1, 1, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
-array_delete primes, 1
+array_delete primes, 2
 array_assert_equal primes, 1, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
-array_delete primes, 0
+array_delete primes, 1
 array_assert_equal primes, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
-array_delete primes, 0
+array_delete primes, 1
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
 
-array_insert odds, 0, 3
+array_insert odds, 1, 3
 array_assert_equal odds, 3
-array_insert odds, 0, 1
+array_insert odds, 1, 1
 array_assert_equal odds, 1, 3
-array_insert odds, 2, 7
+array_insert odds, 3, 7
 array_assert_equal odds, 1, 3, 7
-array_insert odds, 2, 5
+array_insert odds, 3, 5
 array_assert_equal odds, 1, 3, 5, 7
-array_insert odds, 2,
+array_insert odds, 3,
 array_assert_equal odds, 1, 3, 5, 7 ; Unchanged.
 
 array_append odds, 9
@@ -818,18 +818,18 @@ array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37 ; Unchange
 array_extend primes, zeros
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 0, 0, 0, 0
 static_assert primes#len == 12 + zeros#len
-static_assert primes$C == zeros$0
 static_assert primes$D == zeros$1
 static_assert primes$E == zeros$2
 static_assert primes$F == zeros$3
+static_assert primes$10 == zeros$4
 
-array_slice odds, 2
+array_slice odds, 3
 array_assert_equal odds, 3, 5, 7, 9
 array_slice odds, odds#base, odds#base + odds#len
 array_assert_equal odds, 3, 5, 7, 9 ; Unchanged.
-array_slice primes, 0, 12
+array_slice primes, 1, 13
 array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
-array_slice empty, 0
+array_slice empty, 1
 array_assert_equal empty, ; Unchanged.
 
 array_contains result, empty, 42
@@ -840,18 +840,18 @@ array_contains result, primes, 57
 static_assert result == 0
 
 array_find index, empty, 42
-static_assert index == -1
+static_assert index == empty#base - 1
 array_find index, fives, 5
-static_assert index == 0
+static_assert index == 1
 array_find index, primes, 37
-static_assert index == 11
+static_assert index == 12
 
 array_rfind index, empty, 42
-static_assert index == -1
+static_assert index == empty#base - 1
 array_rfind index, fives, 5
-static_assert index == 9
+static_assert index == 10
 array_rfind index, primes, 37
-static_assert index == 11
+static_assert index == 12
 
 array_count result, empty, 42
 static_assert result == 0
@@ -988,7 +988,7 @@ array_shuffle empty
 array_assert_equal empty, ; Unchanged.
 
 array_pick result, primes
-static_assert result == primes$8
+static_assert result == primes$9
 def_array single, 23
 array_pick result, single
 static_assert result == 23
@@ -1041,18 +1041,18 @@ array_max result, single
 static_assert result == 23
 
 array_argmin result, fives
-static_assert result == 0
-array_argmin result, primes
 static_assert result == 1
+array_argmin result, primes
+static_assert result == 2
 array_argmin result, single
-static_assert result == 0
+static_assert result == 1
 
 array_argmax result, fives
-static_assert result == 0
+static_assert result == 1
 array_argmax result, primes
-static_assert result == 7
+static_assert result == 8
 array_argmax result, single
-static_assert result == 0
+static_assert result == 1
 
 array_sum result, fives
 static_assert result == 50
