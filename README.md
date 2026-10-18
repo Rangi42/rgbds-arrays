@@ -50,6 +50,7 @@ There are dozens of potentially-useful macros, so they're broken into categories
    [`use_constant_arrays`](#use_constant_arrays),
    [`use_string_arrays`](#use_string_arrays)
 2. **[Definition](#2-definition):**
+   [`def_array_item`](#def_array_item),
    [`def_array`](#def_array-name-values),
    [`def_array_fill`](#def_array_fill-name-length--value--0),
    [`def_array_range`](#def_array_range-name--start--0-stop--step--1),
@@ -73,8 +74,8 @@ There are dozens of potentially-useful macros, so they're broken into categories
 5. **[Resizing](#5-resizing):**
    [`array_insert`](#array_insert-name-index-values),
    [`array_delete`](#array_delete-name-index),
-   [`array_append`](#array_append-name-values),
-   [`array_prepend`](#array_prepend-name-values),
+   [`array_append`](#array_append-name-values) ([`array_push`](#array_push)),
+   [`array_prepend`](#array_prepend-name-values) ([`array_unshift`](#array_unshift)),
    [`array_pop`](#array_pop-result-name),
    [`array_shift`](#array_shift-result-name),
    [`array_extend`](#array_extend-name-others),
@@ -144,7 +145,7 @@ but are uniquely compatible with functions that require string items
 
 ### 2. Definition
 
-Each of these `def_array*` macros redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to its array. So for example, you can define an array all at once:
+Each of these `def_array*` macros redefines <a id="def_array_item"></a> <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to its array. So for example, you can define an array all at once:
 
 ```asm
 def_array squares, 1, 4, 9, 16
@@ -262,12 +263,12 @@ Deletes an item from an array.
 #### <code>array_append <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
 Appends zero or more values to the end of an array.
-Also known as <b>`array_push`</b>.
+Also known as <a id="array_push"></a> <b>`array_push`</b>.
 
 #### <code>array_prepend <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
 Prepends zero or more values to the beginning of an array.
-Also known as <b>`array_unshift`</b>.
+Also known as <a id="array_unshift"></a> <b>`array_unshift`</b>.
 
 #### <code>array_pop <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
