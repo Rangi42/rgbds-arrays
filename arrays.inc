@@ -400,7 +400,7 @@ MACRO? array_pad ; <name>, <length> [, <value> = 0/""]
 	def __len = \2
 	if __len > \1#len
 		if _NARG == 3
-			def __val {\1#equ} \3
+			redef __val {\1#equ} \3
 		elif #\1#equ === "equs"
 			redef __val equs ""
 		else
@@ -424,7 +424,7 @@ MACRO? array_lpad ; <name>, <length> [, <value> = 0/""]
 	def __len = \2
 	if __len > \1#len
 		if _NARG == 3
-			def __val {\1#equ} \3
+			redef __val {\1#equ} \3
 		elif #\1#equ === "equs"
 			redef __val equs ""
 		else
@@ -854,10 +854,11 @@ ENDM
 ; Reverses an array.
 MACRO? array_reverse ; <name>
 	__check_array_defined \1, array_reverse
+	def __str = #\1#equ === "equs"
 	for? __off, \1#len / 2
 		def __i = \1#base + __off
 		def __j = \1#base + \1#len - __off - 1
-		if #\1#equ === "equs"
+		if __str
 			redef __tmp equs #\1{__i}
 		else
 			def __tmp = \1{__i}
@@ -865,7 +866,7 @@ MACRO? array_reverse ; <name>
 		redef \1{__i} {\1#equ} #\1{__j}
 		redef \1{__j} {\1#equ} #__tmp
 	endr
-	purge __off
+	purge __str, __off
 	if def(__i)
 		purge __i, __j, __tmp
 	endc
@@ -876,8 +877,9 @@ ENDM
 MACRO? _reverse_array_slice ; <name>, <start>, <end>
 	def __start = \2
 	def __end = \3
+	def __str = #\1#equ === "equs"
 	rept? (__end - __start + 1) / 2
-		if #\1#equ === "equs"
+		if __str
 			redef __tmp equs #\1{__start}
 		else
 			def __tmp = \1{__start}
@@ -887,7 +889,7 @@ MACRO? _reverse_array_slice ; <name>, <start>, <end>
 		def __start += 1
 		def __end -= 1
 	endr
-	purge __start, __end
+	purge __start, __end, __str
 	if def(__tmp)
 		purge __tmp
 	endc
@@ -1023,8 +1025,9 @@ MACRO? array_is_sorted ; <result>, <name>
 	def \1 = 1
 	if \2#len > 1
 		def __prev = \2#base
+		def __str = #\2#equ === "equs"
 		for? __idx, \2#base + 1, \2#base + \2#len
-			if #\2#equ === "equs"
+			if __str
 				def __cmp = strcmp(#\2{__idx}, #\2{__prev}) < 0
 			else
 				def __cmp = \2{__idx} < \2{__prev}
@@ -1037,7 +1040,7 @@ MACRO? array_is_sorted ; <result>, <name>
 		endr
 	endc
 	if def(__prev)
-		purge __prev, __idx
+		purge __prev, __str, __idx
 		if def(__cmp)
 			purge __cmp
 		endc
@@ -1051,8 +1054,9 @@ MACRO? array_is_rsorted ; <result>, <name>
 	def \1 = 1
 	if \2#len > 1
 		def __prev = \2#base
+		def __str = #\2#equ === "equs"
 		for? __idx, \2#base + 1, \2#base + \2#len
-			if #\2#equ === "equs"
+			if __str
 				def __cmp = strcmp(#\2{__idx}, #\2{__prev}) > 0
 			else
 				def __cmp = \2{__idx} > \2{__prev}
@@ -1065,7 +1069,7 @@ MACRO? array_is_rsorted ; <result>, <name>
 		endr
 	endc
 	if def(__prev)
-		purge __prev, __idx
+		purge __prev, __str, __idx
 		if def(__cmp)
 			purge __cmp
 		endc
@@ -1124,11 +1128,12 @@ ENDM
 MACRO? array_shuffle ; <name>
 	__check_array_defined \1, array_shuffle
 	if \1#len > 0
+		def __str = #\1#equ === "equs"
 		for? __i, \1#len - 1, 0, -1
 			__next_array_prng
 			def __j = \1#base + _arrays_prng % (__i + 1)
 			def __i += \1#base
-			if #\1#equ === "equs"
+			if __str
 				redef __tmp equs #\1{__i}
 			else
 				def __tmp = \1{__i}
@@ -1136,7 +1141,7 @@ MACRO? array_shuffle ; <name>
 			redef \1{__i} {\1#equ} #\1{__j}
 			redef \1{__j} {\1#equ} #__tmp
 		endr
-		purge __i
+		purge __str, __i
 		if def(__j)
 			purge __j, __tmp
 		endc
