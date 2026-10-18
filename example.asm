@@ -7,10 +7,14 @@ INCLUDE "arrays.inc"
 check_arrays_inc_min_version 1
 check_arrays_inc_min_version 1.3
 
+; Verify the expected default configuration.
+static_assert _arrays_base == 0 && _arrays_are_constant == 0
+
 ; use_array_base <base>
 ; Set the base index for subsequent arrays.
 ; Typically 0 or 1, but higher non-negative bases are also technically valid.
-use_array_base 0
+use_array_base 42
+static_assert _arrays_base == 42
 
 ; use_variable_arrays
 ; Set subsequent arrays to have variable items (mutable, `=`).
