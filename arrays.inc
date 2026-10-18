@@ -25,7 +25,7 @@ ENDM
 ; Only modify this using `use_array_base`.
 def _arrays_base = 0
 
-; Set the base index for subsequent arrays.
+; Set the base index for subsequently defined arrays.
 ; Typically 0 or 1, but higher non-negative bases are also technically valid.
 MACRO? use_array_base ; <base>
 	def _arrays_base = \1
@@ -37,17 +37,17 @@ ENDM
 ; Only modify this using `use_constant_arrays` or `use_variable_arrays`.
 def _arrays_are_constant = 0
 
-; Set subsequent arrays to have variable items (mutable, `=`).
+; Set subsequently defined arrays to have variable items (mutable, `=`).
 MACRO? use_variable_arrays
 	def _arrays_are_constant = 0
 ENDM
 
-; Set subsequent arrays to have constant items (immutable, `equ`).
+; Set subsequently defined arrays to have constant items (immutable, `equ`).
 MACRO? use_constant_arrays
 	def _arrays_are_constant = 1
 ENDM
 
-; Set subsequent arrays to have string items (immutable, `equs`).
+; Set subsequently defined arrays to have string items (immutable, `equs`).
 ; String arrays are not compatible with functions that require numeric items
 ; (`def_array_range`, `array_product`, and `array_mean`),
 ; but are uniquely compatible with functions that require string items
