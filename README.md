@@ -120,28 +120,48 @@ There are dozens of potentially-useful macros, so they're broken into categories
 
 #### <code>check_arrays_inc_min_version <i>&lt;major&gt;</i>[.<i>&lt;minor&gt;</i>]</code>
 
+<ul>
+
 Check whether this library version meets a minimum required one.
 
+</ul>
+
 #### <code>use_array_base <i>&lt;base&gt;</i></code>
+
+<ul>
 
 Set the base index for subsequently defined arrays.
 Typically 0 or 1, but higher non-negative bases are also technically valid.
 
+</ul>
+
 #### `use_variable_arrays`
+
+<ul>
 
 Set subsequently defined arrays to have [variable](https://rgbds.gbdev.io/docs/rgbasm.5#Variables) items (mutable, `=`).
 
+</ul>
+
 #### `use_constant_arrays`
+
+<ul>
 
 Set subsequently defined arrays to have [constant](https://rgbds.gbdev.io/docs/rgbasm.5#Numeric_constants) items (immutable, `equ`).
 
+</ul>
+
 #### `use_string_arrays`
+
+<ul>
 
 Set subsequently defined arrays to have [string](https://rgbds.gbdev.io/docs/rgbasm.5#String_constants) items (immutable, `equs`).
 String arrays are not compatible with functions that require numeric items
 (`def_array_range`, `array_product`, and `array_mean`),
 but are uniquely compatible with functions that require string items
 (`array_join`).
+
+</ul>
 
 ### 2. Definition
 
@@ -163,14 +183,24 @@ def_array_item 16
 
 #### <code>def_array <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
+<ul>
+
 Defines a new array, initializing it with zero or more values.
 
+</ul>
+
 #### <code>def_array_fill <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0/""]</code>
+
+<ul>
 
 Defines a new array, initializing it to be filled with N of the same value,
 or with N zeros (or empty strings for string arrays) if the value is unspecified.
 
+</ul>
+
 #### <code>def_array_range <i>&lt;name&gt;</i> [, <i>&lt;start&gt;</i> = 0], <i>&lt;stop&gt;</i> [, <i>&lt;step&gt;</i> = 1]</code>
+
+<ul>
 
 Defines a new array, initializing it to be an [arithmetic sequence](https://en.wikipedia.org/wiki/Arithmetic_progression).
 
@@ -181,266 +211,480 @@ Defines a new array, initializing it to be an [arithmetic sequence](https://en.w
 - <b><code>def_array_range <i>&lt;name&gt;</i>, <i>&lt;start&gt;</i>, <i>&lt;stop&gt;</i>, <i>&lt;step&gt;</i></code></b>
   gives the half-open interval [<i>&lt;start&gt;</i>, <i>&lt;stop&gt;</i>), skipping by <i>&lt;step&gt;</i>.
 
+</ul>
+
 #### <code>def_array_copy <i>&lt;name&gt;</i>, <i>&lt;other&gt;</i></code>
+
+<ul>
 
 Defines a new array as a copy of another array.
 
+</ul>
+
 #### <code>def_array_concat <i>&lt;name&gt;</i>, <i>&lt;...others&gt;</i></code>
+
+<ul>
 
 Defines a new array as a concatenation of other arrays.
 
+</ul>
+
 #### <code>def_array_slice <i>&lt;name&gt;</i>, <i>&lt;other&gt;</i>, <i>&lt;start pos&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
+
+<ul>
 
 Defines a new array as a slice of another array starting at a position,
 and ending before a subsequent position if one is specified.
 
+</ul>
+
 #### <code>array_purge <i>&lt;...names&gt;</i></code>
 
+<ul>
+
 [Purges](https://rgbds.gbdev.io/docs/rgbasm.5#Purging_symbols) an array and all its items.
+
+</ul>
 
 ### 3. Output
 
 #### <code>array_db <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Declares a `db` byte for each item of an array.
+
+</ul>
 
 #### <code>array_dw <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Declares a `dw` word for each item of an array.
+
+</ul>
 
 #### <code>array_dl <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Declares a `dl` long for each item of an array.
+
+</ul>
 
 #### <code>array_print <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Prints the items of an array, comma-separated between brackets.
+
+</ul>
 
 #### <code>array_println <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Prints the items of an array, comma-separated between brackets,
 followed by a newline.
+
+</ul>
 
 ### 4. Accessing
 
 #### <code>array_get <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;index&gt;</i></code>
 
+<ul>
+
 Gets the value of an item in an array.
+
+</ul>
 
 #### <code>array_set <i>&lt;name&gt;</i>, <i>&lt;index&gt;</i>, <i>&lt;value&gt;</i></code>
 
+<ul>
+
 Sets the value of an item in an array.
 
+</ul>
+
 #### <code>array_contains <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;value&gt;</i></code>
+
+<ul>
 
 Checks whether a value exists in an array,
 setting the result to 1 if it does or 0 if it does not.
 
+</ul>
+
 #### <code>array_find <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;value&gt;</i></code>
+
+<ul>
 
 Find the first index of a value in an array,
 or base&nbsp;−&nbsp;1 if the value is not in the array.
 
+</ul>
+
 #### <code>array_rfind <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;value&gt;</i></code>
+
+<ul>
 
 Find the last index of a value in an array,
 or base&nbsp;−&nbsp;1 if the value is not in the array.
 
+</ul>
+
 #### <code>array_count <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;value&gt;</i></code>
 
+<ul>
+
 Count the occurrences of a value in an array.
+
+</ul>
 
 ### 5. Resizing
 
 #### <code>array_insert <i>&lt;name&gt;</i>, <i>&lt;index&gt;</i>, <i>&lt;...values&gt;</i></code>
 
+<ul>
+
 Inserts zero or more values into an array at a given position.
+
+</ul>
 
 #### <code>array_delete <i>&lt;name&gt;</i>, <i>&lt;index&gt;</i></code>
 
+<ul>
+
 Deletes an item from an array.
 
+</ul>
+
 #### <code>array_append <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
+
+<ul>
 
 Appends zero or more values to the end of an array.
 Also known as <a id="array_push"></a> <b>`array_push`</b>.
 
+</ul>
+
 #### <code>array_prepend <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
+
+<ul>
 
 Prepends zero or more values to the beginning of an array.
 Also known as <a id="array_unshift"></a> <b>`array_unshift`</b>.
 
+</ul>
+
 #### <code>array_pop <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Pops the value from the end of a nonempty array.
 
+</ul>
+
 #### <code>array_shift <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Shifts the value from the beginning of a nonempty array.
 
+</ul>
+
 #### <code>array_extend <i>&lt;name&gt;</i>, <i>&lt;...others&gt;</i></code>
+
+<ul>
 
 Extends an array by concatenating other arrays.
 
+</ul>
+
 #### <code>array_slice <i>&lt;name&gt;</i>, <i>&lt;start pos&gt;</i> [, <i>&lt;end pos&gt;</i>]</code>
+
+<ul>
 
 Slices an array to start at a specified position,
 and end before a subsequent position if one is specified.
 
+</ul>
+
 #### <code>array_clear <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Removes all items from an array, resetting its length to 0.
 
+</ul>
+
 #### <code>array_pad <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0/""]</code>
+
+<ul>
 
 Pads the end of an array up to a minimum length with a given value,
 or with zeros (or empty strings for string arrays) if the value is unspecified.
 
+</ul>
+
 #### <code>array_lpad <i>&lt;name&gt;</i>, <i>&lt;length&gt;</i> [, <i>&lt;value&gt;</i> = 0/""]</code>
+
+<ul>
 
 Pads the beginning of an array up to a minimum length with a given value,
 or with zeros (or empty strings for string arrays) if the value is unspecified.
+
+</ul>
 
 ### 6. Editing
 
 #### <code>array_replace <i>&lt;name&gt;</i>, <i>&lt;old&gt;</i>, <i>&lt;new&gt;</i> [, <i>&lt;limit&gt;</i>]</code>
 
+<ul>
+
 Replace the first N occurrences of one value in an array with another,
 or replace all of them if N is unspecified.
 
+</ul>
+
 #### <code>array_rreplace <i>&lt;name&gt;</i>, <i>&lt;old&gt;</i>, <i>&lt;new&gt;</i> [, <i>&lt;limit&gt;</i>]</code>
+
+<ul>
 
 Replace the last N occurrences of one value in an array with another,
 or replace all of them if N is unspecified.
 
+</ul>
+
 #### <code>array_remove <i>&lt;name&gt;</i>, <i>&lt;value&gt;</i> [, <i>&lt;limit&gt;</i>]</code>
+
+<ul>
 
 Remove the first N occurrences of a value in an array,
 or remove all of them if N is unspecified.
 
+</ul>
+
 #### <code>array_rremove <i>&lt;name&gt;</i>, <i>&lt;value&gt;</i> [, <i>&lt;limit&gt;</i>]</code>
+
+<ul>
 
 Remove the last N occurrences of a value in an array,
 or remove all of them if N is unspecified.
 
+</ul>
+
 #### <code>array_dedup <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Deduplicates an array by reducing runs of the same value to one item.
 
+</ul>
+
 #### <code>array_unique <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Removes all duplicate items in an array,
 leaving only one item per unique value.
+
+</ul>
 
 ### 7. Ordering
 
 #### <code>array_reverse <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Reverses an array.
 
+</ul>
+
 #### <code>array_rotate <i>&lt;name&gt;</i>, <i>&lt;amount&gt;</i></code>
+
+<ul>
 
 Rotates an array right by a positive amount,
 or left by a negative amount.
 
+</ul>
+
 #### <code>array_sort <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Sorts an array in order from least to greatest.
 Uses an 𝒪(<i>n</i> log <i>n</i>) in-place [merge sort](https://en.wikipedia.org/wiki/Merge_sort) algorithm.
 
+</ul>
+
 #### <code>array_rsort <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Sorts an array in order from greatest to least.
 Uses an 𝒪(<i>n</i> log <i>n</i>) in-place merge sort algorithm.
+
+</ul>
 
 ### 8. Randomness
 
 #### <code>array_reseed <i>&lt;seed&gt;</i></code>
 
+<ul>
+
 Reseed the [xorshift32](https://en.wikipedia.org/wiki/Xorshift) [PRNG](https://en.wikipedia.org/wiki/Pseudorandom_number_generator) used in randomized array macros
 (`array_shuffle` and `array_pick`).
 The seed cannot be zero, since that would only generate more zeros.
 
+</ul>
+
 #### <code>array_shuffle <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Randomly shuffle an array.
 Uses the 𝒪(<i>n</i>) [Fisher-Yates](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle) aka Knuth algorithm.
 
+</ul>
+
 #### <code>array_pick <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Randomly pick an item from a nonempty array.
+
+</ul>
 
 ### 9. Predicates
 
 #### <code>array_assert_equal <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
+<ul>
+
 Asserts that an array's contents have exactly the specified values.
 
+</ul>
+
 #### <code>array_is_sorted <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Checks whether an array is sorted from least to greatest,
 setting the result to 1 if it is or 0 if it is not.
 
+</ul>
+
 #### <code>array_is_rsorted <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Checks whether an array is sorted from greatest to least,
 setting the result to 1 if it is or 0 if it is not.
 
+</ul>
+
 #### <code>array_is_equal <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
+
+<ul>
 
 Checks whether an array's contents have exactly the specified values,
 setting the result to 1 if it does or 0 if it does not.
 
+</ul>
+
 #### <code>array_are_all_equal <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Checks whether all the values in an array are equal,
 setting the result to 1 if they are or 0 if they are not.
 
+</ul>
+
 #### <code>array_are_all_unique <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Checks whether all the values in an array are unique,
 setting the result to 1 if they are or 0 if they are not.
+
+</ul>
 
 ### 10. Aggregates
 
 #### <code>array_min <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Find the minimum value in a nonempty array.
+
+</ul>
 
 #### <code>array_max <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Find the maximum value in a nonempty array.
+
+</ul>
 
 #### <code>array_argmin <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Find the index of a minimum value in a nonempty array.
+
+</ul>
 
 #### <code>array_argmax <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 
+<ul>
+
 Find the index of a maximum value in a nonempty array.
 
+</ul>
+
 #### <code>array_sum <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Take the sum of values in an array,
 or 0 if the array is empty.
 Not compatible with string arrays.
 
+</ul>
+
 #### <code>array_product <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Take the product of values in an array,
 or 1 if the array is empty.
 Not compatible with string arrays.
 
+</ul>
+
 #### <code>array_mean <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
+
+<ul>
 
 Take the mean (average) of values in a nonempty array.
 Not compatible with string arrays.
 
+</ul>
+
 #### <code>array_join <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i> [, <i>&lt;sep&gt;</i> = ""]</code>
+
+<ul>
 
 Concatenate the string values in an array,
 interspersed with a separator if one is specified.
 Not compatible with numeric arrays.
+
+</ul>
 
 ## Credits
 
