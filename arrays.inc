@@ -49,7 +49,9 @@ ENDM
 
 ; Set subsequent arrays to have string items (immutable, `equs`).
 ; String arrays are not compatible with functions that require numeric items
-; (`def_array_range`, `array_product`, and `array_mean`).
+; (`def_array_range`, `array_product`, and `array_mean`),
+; but are uniquely compatible with functions that require string items
+; (`array_join`).
 MACRO? use_string_arrays
 	def _arrays_are_constant = 2
 ENDM

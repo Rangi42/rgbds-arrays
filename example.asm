@@ -22,6 +22,15 @@ static_assert !_arrays_are_constant
 use_constant_arrays
 static_assert _arrays_are_constant == 1
 
+; use_string_arrays
+; Set subsequent arrays to have string items (immutable, `equs`).
+; String arrays are not compatible with functions that require numeric items
+; (`def_array_range`, `array_product`, and `array_mean`),
+; but are uniquely compatible with functions that require string items
+; (`array_join`).
+use_string_arrays
+static_assert _arrays_are_constant == 2
+
 
 ; ==============================================================================
 ; Variable arrays, with base index 0 (the default configuration)
