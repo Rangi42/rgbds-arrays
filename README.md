@@ -7,7 +7,7 @@ The latest version is **1.4**.
 ## Usage
 
 Download [`arrays.inc`](arrays.inc), `INCLUDE` it in your project, and then you can use the macros.
-See "[Macros](#macros)" below for documentation of each macro, or [`examples.asm`](examples.asm) for demonstrations of how they're used.
+See "[Macros](#macros)" below for documentation of each macro, or [`example.asm`](example.asm) for demonstrations of how they're used.
 
 Arrays are really just groups of associated numeric and string symbols. If <code><i>arr</i></code> is an array, that means all these constants are defined:
 
