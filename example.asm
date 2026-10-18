@@ -252,16 +252,18 @@ array_assert_equal odds, 1, 3, 5, 7 ; Unchanged.
 
 ; array_append <name>, <...values>
 ; Appends zero or more values to the end of an array.
+; Also known as `array_push`.
 array_append odds, 9
 array_assert_equal odds, 1, 3, 5, 7, 9
-array_append odds,
+array_push odds,
 array_assert_equal odds, 1, 3, 5, 7, 9 ; Unchanged.
 
 ; array_prepend <name>, <...values>
 ; Prepends zero or more values to the beginning of an array.
+; Also known as `array_unshift`.
 array_prepend odds, -1
 array_assert_equal odds, -1, 1, 3, 5, 7, 9
-array_prepend odds,
+array_unshift odds,
 array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
 
 ; array_pop <result>, <name>
@@ -796,12 +798,12 @@ array_assert_equal odds, 1, 3, 5, 7
 array_insert odds, 3,
 array_assert_equal odds, 1, 3, 5, 7 ; Unchanged.
 
-array_append odds, 9
+array_push odds, 9
 array_assert_equal odds, 1, 3, 5, 7, 9
 array_append odds,
 array_assert_equal odds, 1, 3, 5, 7, 9 ; Unchanged.
 
-array_prepend odds, -1
+array_unshift odds, -1
 array_assert_equal odds, -1, 1, 3, 5, 7, 9
 array_prepend odds,
 array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
@@ -1236,12 +1238,12 @@ array_assert_equal odds, "1", "3", "5", "7" ; Unchanged.
 
 array_append odds, "9"
 array_assert_equal odds, "1", "3", "5", "7", "9"
-array_append odds,
+array_push odds,
 array_assert_equal odds, "1", "3", "5", "7", "9" ; Unchanged.
 
 array_prepend odds, "-1"
 array_assert_equal odds, "-1", "1", "3", "5", "7", "9"
-array_prepend odds,
+array_unshift odds,
 array_assert_equal odds, "-1", "1", "3", "5", "7", "9" ; Unchanged.
 
 def_array evens, "2", "4", "6", "8", "10", "12"

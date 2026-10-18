@@ -262,10 +262,12 @@ Deletes an item from an array.
 #### <code>array_append <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
 Appends zero or more values to the end of an array.
+Also known as <b>`array_push`</b>.
 
 #### <code>array_prepend <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
 Prepends zero or more values to the beginning of an array.
+Also known as <b>`array_unshift`</b>.
 
 #### <code>array_pop <i>&lt;result&gt;</i>, <i>&lt;name&gt;</i></code>
 

@@ -533,6 +533,7 @@ MACRO? array_insert ; <name>, <index>, <...values>
 ENDM
 
 ; Appends zero or more values to the end of an array.
+; Also known as `array_push`.
 MACRO? array_append ; <name>, <...values>
 	__check_array_defined \1, array_append
 	for? __argi, 2, _NARG + 1
@@ -547,6 +548,7 @@ MACRO? array_append ; <name>, <...values>
 ENDM
 
 ; Prepends zero or more values to the beginning of an array.
+; Also known as `array_unshift`.
 MACRO? array_prepend ; <name>, <...values>
 	__check_array_defined \1, array_prepend
 	for? __idx, \1#base + \1#len - 1, \1#base - 1, -1
@@ -562,6 +564,16 @@ MACRO? array_prepend ; <name>, <...values>
 	if def(__new)
 		purge __new
 	endc
+ENDM
+
+; Alias for `array_append`.
+MACRO? array_push
+	array_append \#
+ENDM
+
+; Alias for `array_prepend`.
+MACRO? array_unshift
+	array_prepend \#
 ENDM
 
 ; Pops the value from the end of a nonempty array.
