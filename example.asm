@@ -12,15 +12,22 @@ check_arrays_inc_min_version 1.3
 ; Typically 0 or 1, but higher non-negative bases are also technically valid.
 use_array_base 0
 
-; use_constant_arrays
-; Set subsequent arrays to have constant items (immutable, `equ`).
-use_constant_arrays
-static_assert _arrays_are_constant
-
 ; use_variable_arrays
 ; Set subsequent arrays to have variable items (mutable, `=`).
 use_variable_arrays
 static_assert !_arrays_are_constant
+
+; use_constant_arrays
+; Set subsequent arrays to have constant items (immutable, `equ`).
+use_constant_arrays
+static_assert _arrays_are_constant == 1
+
+
+; ==============================================================================
+; Variable arrays, with base index 0 (the default configuration)
+; ==============================================================================
+use_array_base 0
+use_variable_arrays
 
 ; def_array <name>, <...values>
 ; Defines a new array, initializing it with zero or more values.
@@ -123,7 +130,7 @@ array_assert_equal sliced_empty,
 def_array_slice sliced_end, naturals, naturals#base + naturals#len
 array_assert_equal sliced_end,
 
-; array_purge <name>
+; array_purge <...names>
 ; Purges an array and all its items.
 array_purge copied
 static_assert !def(copied#len)
@@ -615,3 +622,465 @@ array_mean result, primes
 static_assert result == 16
 array_mean result, single
 static_assert result == 23
+
+; Clean up previously defined arrays for the next tests.
+array_purge backwards, concatenated, concatenated_none, countdown, \
+            deduplicating, empty, empty_range, evens, fives, naturals, odds, \
+            positives, primes, removing, replacing, rotating, rremoving, \
+            rreplacing, single, sliced_concatenated, sliced_empty, sliced_end, \
+            sliced_primes, zeros
+purge result, index, prime_11
+
+
+; ==============================================================================
+; Constant arrays, with base index 1
+; ==============================================================================
+use_array_base 0
+use_constant_arrays
+
+def_array empty
+array_assert_equal empty,
+static_assert empty#len == 0
+
+def_array primes, 2, 3, 5, 7, 11, 13, 17, 19
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19
+static_assert primes#len == 8
+static_assert primes$0 == 2
+static_assert primes$7 == 19
+
+def_array odds
+def_array_item 1
+def_array_item 3
+def_array_item 5
+def_array_item 7
+def_array_item 9
+array_assert_equal odds, 1, 3, 5, 7, 9
+static_assert odds#len == 5
+static_assert odds$0 == 1
+static_assert odds$4 == 9
+
+def_array_fill zeros, 4
+array_assert_equal zeros, 0, 0, 0, 0
+
+def_array_fill fives, 10, 5
+array_assert_equal fives, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
+
+def_array_range naturals, 10
+array_assert_equal naturals, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+def_array_range positives, 1, 10
+array_assert_equal positives, 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+def_array_range countdown, 10, -1, -1
+array_assert_equal countdown, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+static_assert countdown#len == 11
+static_assert countdown$0 == 10
+static_assert countdown$A == 0
+
+def_array_range empty_range, 5, 5 ; This should print a warning.
+static_assert empty_range#len == 0
+
+def_array_range backwards, 1, 5, -1 ; This should print a warning.
+static_assert backwards#len == 0
+
+def_array_copy copied, primes
+array_assert_equal copied, 2, 3, 5, 7, 11, 13, 17, 19
+static_assert copied#len == primes#len
+static_assert copied$0 == primes$0
+static_assert copied$5 == primes$5
+
+def_array_concat concatenated, primes, positives
+array_assert_equal concatenated, 2, 3, 5, 7, 11, 13, 17, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9
+static_assert concatenated#len == primes#len + positives#len
+def_array_concat concatenated_none,
+array_assert_equal concatenated_none,
+static_assert concatenated_none#len == 0
+
+def_array_slice sliced_primes, primes, 3
+array_assert_equal sliced_primes, 7, 11, 13, 17, 19
+def_array_slice sliced_concatenated, concatenated, 4, 12
+array_assert_equal sliced_concatenated, 11, 13, 17, 19, 1, 2, 3, 4
+def_array_slice sliced_empty, naturals, 9, 9
+array_assert_equal sliced_empty,
+def_array_slice sliced_end, naturals, naturals#base + naturals#len
+array_assert_equal sliced_end,
+
+array_purge copied
+static_assert !def(copied#len)
+static_assert !def(copied$0)
+static_assert !def(copied$5)
+
+pushs "array_db/dw/dl constant", ROM0 ; Only necessary for testing `array_db/dw/dl`.
+
+: array_db empty
+static_assert @ - :- == empty#len
+: array_db primes
+static_assert @ - :- == primes#len
+
+: array_dw empty
+static_assert @ - :- == empty#len * 2
+: array_dw primes
+static_assert @ - :- == primes#len * 2
+
+: array_dl empty
+static_assert @ - :- == empty#len * 4
+: array_dl primes
+static_assert @ - :- == primes#len * 4
+
+pops
+
+array_clear odds
+array_assert_equal odds, ; Empty.
+static_assert odds#len == 0
+static_assert !def(odds$0)
+
+array_pad primes, 5
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19 ; Unchanged.
+array_pad primes, 9
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0
+array_pad primes, 12, 257
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257
+
+array_lpad primes, 10
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257 ; Unchanged.
+array_lpad primes, 14
+array_assert_equal primes, 0, 0, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257
+array_lpad primes, 16, 1
+array_assert_equal primes, 1, 1, 0, 0, 2, 3, 5, 7, 11, 13, 17, 19, 0, 257, 257, 257
+
+print "Countdown: T-minus "
+array_print countdown
+println "... liftoff!"
+
+print "Empty: "
+array_println empty
+
+array_get prime_11, primes, 11
+static_assert prime_11 == primes$B
+
+array_set primes, 12, 23
+array_set primes, 13, 29
+array_set primes, 14, 31
+array_set primes, 15, 37
+array_assert_equal primes, 1, 1, 0, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+
+array_delete primes, 2
+array_assert_equal primes, 1, 1, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_delete primes, 1
+array_assert_equal primes, 1, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_delete primes, 0
+array_assert_equal primes, 0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_delete primes, 0
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+
+array_insert odds, 0, 3
+array_assert_equal odds, 3
+array_insert odds, 0, 1
+array_assert_equal odds, 1, 3
+array_insert odds, 2, 7
+array_assert_equal odds, 1, 3, 7
+array_insert odds, 2, 5
+array_assert_equal odds, 1, 3, 5, 7
+array_insert odds, 2,
+array_assert_equal odds, 1, 3, 5, 7 ; Unchanged.
+
+array_append odds, 9
+array_assert_equal odds, 1, 3, 5, 7, 9
+array_append odds,
+array_assert_equal odds, 1, 3, 5, 7, 9 ; Unchanged.
+
+array_prepend odds, -1
+array_assert_equal odds, -1, 1, 3, 5, 7, 9
+array_prepend odds,
+array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
+
+def_array_range evens, 2, 13, 2
+array_assert_equal evens, 2, 4, 6, 8, 10, 12
+array_pop result, evens
+static_assert result == 12
+array_assert_equal evens, 2, 4, 6, 8, 10
+array_pop result, evens
+static_assert result == 10
+array_assert_equal evens, 2, 4, 6, 8
+
+array_assert_equal evens, 2, 4, 6, 8
+array_shift result, evens
+static_assert result == 2
+array_assert_equal evens, 4, 6, 8
+array_shift result, evens
+static_assert result == 4
+array_assert_equal evens, 6, 8
+
+array_extend odds, empty, empty, empty
+array_assert_equal odds, -1, 1, 3, 5, 7, 9 ; Unchanged.
+array_extend primes,
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37 ; Unchanged.
+array_extend primes, zeros
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 0, 0, 0, 0
+static_assert primes#len == 12 + zeros#len
+static_assert primes$C == zeros$0
+static_assert primes$D == zeros$1
+static_assert primes$E == zeros$2
+static_assert primes$F == zeros$3
+
+array_slice odds, 2
+array_assert_equal odds, 3, 5, 7, 9
+array_slice odds, odds#base, odds#base + odds#len
+array_assert_equal odds, 3, 5, 7, 9 ; Unchanged.
+array_slice primes, 0, 12
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_slice empty, 0
+array_assert_equal empty, ; Unchanged.
+
+array_contains result, empty, 42
+static_assert result == 0
+array_contains result, primes, 37
+static_assert result == 1
+array_contains result, primes, 57
+static_assert result == 0
+
+array_find index, empty, 42
+static_assert index == -1
+array_find index, fives, 5
+static_assert index == 0
+array_find index, primes, 37
+static_assert index == 11
+
+array_rfind index, empty, 42
+static_assert index == -1
+array_rfind index, fives, 5
+static_assert index == 9
+array_rfind index, primes, 37
+static_assert index == 11
+
+array_count result, empty, 42
+static_assert result == 0
+array_count result, fives, 5
+static_assert result == 10
+array_count result, primes, 37
+static_assert result == 1
+
+def_array replacing, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+static_assert replacing#len == 14
+array_replace replacing, 4, 5
+array_assert_equal replacing, 1, 1, 2, 2, 3, 3, 5, 5, 3, 3, 2, 2, 1, 1
+array_replace replacing, 2, 6, 3
+array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1
+array_replace replacing, 9, 1
+array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1 ; Unchanged.
+array_replace replacing, 3, 42, 0
+array_assert_equal replacing, 1, 1, 6, 6, 3, 3, 5, 5, 3, 3, 6, 2, 1, 1 ; Unchanged.
+array_replace empty, 42, 99
+array_assert_equal empty, ; Unchanged.
+
+def_array rreplacing, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+static_assert rreplacing#len == 14
+array_rreplace rreplacing, 4, 5
+array_assert_equal rreplacing, 1, 1, 2, 2, 3, 3, 5, 5, 3, 3, 2, 2, 1, 1
+array_rreplace rreplacing, 2, 6, 3
+array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1
+array_rreplace rreplacing, 9, 1
+array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1 ; Unchanged.
+array_rreplace rreplacing, 3, 42, 0
+array_assert_equal rreplacing, 1, 1, 2, 6, 3, 3, 5, 5, 3, 3, 6, 6, 1, 1 ; Unchanged.
+array_rreplace empty, 42, 99
+array_assert_equal empty, ; Unchanged.
+
+def_array removing, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+static_assert removing#len == 14
+array_remove removing, 4
+array_assert_equal removing, 1, 1, 2, 2, 3, 3, 3, 3, 2, 2, 1, 1
+array_contains result, removing, 4
+static_assert result == 0
+array_remove removing, 2, 3
+array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1
+array_remove removing, 9
+array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1 ; Unchanged.
+array_remove removing, 3, 0
+array_assert_equal removing, 1, 1, 3, 3, 3, 3, 2, 1, 1 ; Unchanged.
+array_remove empty, 42
+array_assert_equal empty, ; Unchanged.
+
+def_array rremoving, 1, 1, 2, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1
+static_assert rremoving#len == 14
+array_rremove rremoving, 4
+array_assert_equal rremoving, 1, 1, 2, 2, 3, 3, 3, 3, 2, 2, 1, 1
+array_contains result, rremoving, 4
+static_assert result == 0
+array_rremove rremoving, 2, 3
+array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1
+array_rremove rremoving, 9
+array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1 ; Unchanged.
+array_rremove rremoving, 3, 0
+array_assert_equal rremoving, 1, 1, 2, 3, 3, 3, 3, 1, 1 ; Unchanged.
+array_rremove empty, 42
+array_assert_equal empty, ; Unchanged.
+
+array_reverse primes
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_reverse empty
+array_assert_equal empty, ; Unchanged.
+
+def_array rotating, 1, 2, 3, 4, 5
+array_rotate rotating, 0
+array_assert_equal rotating, 1, 2, 3, 4, 5 ; Unchanged.
+array_rotate rotating, 1
+array_assert_equal rotating, 5, 1, 2, 3, 4
+array_rotate rotating, -1
+array_assert_equal rotating, 1, 2, 3, 4, 5
+array_rotate rotating, 2
+array_assert_equal rotating, 4, 5, 1, 2, 3
+array_rotate rotating, -2
+array_assert_equal rotating, 1, 2, 3, 4, 5
+array_rotate primes, 3
+array_assert_equal primes, 5, 3, 2, 37, 31, 29, 23, 19, 17, 13, 11, 7
+array_rotate primes, -3
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_rotate primes, 4
+array_assert_equal primes, 7, 5, 3, 2, 37, 31, 29, 23, 19, 17, 13, 11
+array_rotate primes, -4
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_rotate empty, 1
+array_assert_equal empty, ; Unchanged.
+array_rotate empty, -1
+array_assert_equal empty, ; Unchanged.
+
+array_sort primes
+array_assert_equal primes, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37
+array_sort empty
+array_assert_equal empty, ; Unchanged.
+
+array_rsort primes
+array_assert_equal primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+array_rsort empty
+array_assert_equal empty, ; Unchanged.
+
+array_is_sorted result, empty
+static_assert result == 1
+array_is_sorted result, primes
+static_assert result == 0
+array_sort primes
+array_is_sorted result, primes
+static_assert result == 1
+
+array_is_rsorted result, empty
+static_assert result == 1
+array_is_rsorted result, primes
+static_assert result == 0
+array_rsort primes
+array_is_rsorted result, primes
+static_assert result == 1
+
+array_is_equal result, empty,
+static_assert result == 1
+array_is_equal result, empty, 42
+static_assert result == 0
+array_is_equal result, primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2
+static_assert result == 1
+array_is_equal result, primes, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3
+static_assert result == 0
+
+array_reseed $deadbeef
+
+array_shuffle primes
+array_assert_equal primes, 13, 2, 3, 29, 11, 5, 7, 37, 31, 19, 17, 23
+array_shuffle empty
+array_assert_equal empty, ; Unchanged.
+
+array_pick result, primes
+static_assert result == primes$8
+def_array single, 23
+array_pick result, single
+static_assert result == 23
+
+def_array deduplicating, 1, 1, 2, 3, 3, 3, 2, 2, 1, 4, 4, 4, 4, 3, 2, 1, 1
+array_dedup deduplicating
+array_assert_equal deduplicating, 1, 2, 3, 2, 1, 4, 3, 2, 1
+array_dedup single
+array_assert_equal single, 23 ; Unchanged.
+array_dedup empty
+array_assert_equal empty, ; Unchanged.
+
+array_unique deduplicating
+array_assert_equal deduplicating, 1, 2, 3, 4
+array_unique single
+array_assert_equal single, 23 ; Unchanged.
+array_unique empty
+array_assert_equal empty, ; Unchanged.
+
+array_are_all_equal result, fives
+static_assert result == 1
+array_are_all_equal result, primes
+static_assert result == 0
+array_are_all_equal result, single
+static_assert result == 1
+array_are_all_equal result, empty
+static_assert result == 1
+
+array_are_all_unique result, fives
+static_assert result == 0
+array_are_all_unique result, primes
+static_assert result == 1
+array_are_all_unique result, single
+static_assert result == 1
+array_are_all_unique result, empty
+static_assert result == 1
+
+array_min result, fives
+static_assert result == 5
+array_min result, primes
+static_assert result == 2
+array_min result, single
+static_assert result == 23
+
+array_max result, fives
+static_assert result == 5
+array_max result, primes
+static_assert result == 37
+array_max result, single
+static_assert result == 23
+
+array_argmin result, fives
+static_assert result == 0
+array_argmin result, primes
+static_assert result == 1
+array_argmin result, single
+static_assert result == 0
+
+array_argmax result, fives
+static_assert result == 0
+array_argmax result, primes
+static_assert result == 7
+array_argmax result, single
+static_assert result == 0
+
+array_sum result, fives
+static_assert result == 50
+array_sum result, primes
+static_assert result == 197
+array_sum result, single
+static_assert result == 23
+array_sum result, empty
+static_assert result == 0
+
+array_product result, odds
+static_assert result == 945
+array_product result, single
+static_assert result == 23
+array_product result, empty
+static_assert result == 1
+
+array_mean result, fives
+static_assert result == 5
+array_mean result, primes
+static_assert result == 16
+array_mean result, single
+static_assert result == 23
+
+; Clean up previously defined arrays for the next tests.
+array_purge backwards, concatenated, concatenated_none, countdown, \
+            deduplicating, empty, empty_range, evens, fives, naturals, odds, \
+            positives, primes, removing, replacing, rotating, rremoving, \
+            rreplacing, single, sliced_concatenated, sliced_empty, sliced_end, \
+            sliced_primes, zeros
+purge result, index, prime_11

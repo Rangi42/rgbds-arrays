@@ -35,13 +35,13 @@ Check whether this library version meets a minimum required one.
 Set the base index for subsequent arrays.
 Typically 0 or 1, but higher non-negative bases are also technically valid.
 
-### `use_constant_arrays`
-
-Set subsequent arrays to have constant items (immutable, `equ`).
-
 ### `use_variable_arrays`
 
 Set subsequent arrays to have variable items (mutable, `=`).
+
+### `use_constant_arrays`
+
+Set subsequent arrays to have constant items (immutable, `equ`).
 
 ### <code>def_array <i>&lt;name&gt;</i>, <i>&lt;...values&gt;</i></code>
 
@@ -92,7 +92,7 @@ and ending before a subsequent position if one is specified.
 
 Redefines <b><code>def_array_item <i>&lt;...values&gt;</i></code></b> to append values to this array.
 
-### <code>array_purge <i>&lt;name&gt;</i></code>
+### <code>array_purge <i>&lt;...names&gt;</i></code>
 
 Purges an array and all its items.
 

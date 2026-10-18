@@ -32,19 +32,19 @@ MACRO? use_array_base ; <base>
 	__check_non_negative_for_array _arrays_base, "Array base", use_array_base
 ENDM
 
-; Whether array items are constants (if 1) or variables (if 0).
+; Whether array items are variables (if 0) or `equ` constants (if 1).
 ; Array items are variable by default.
 ; Only modify this using `use_constant_arrays` or `use_variable_arrays`.
 def _arrays_are_constant = 0
 
-; Set subsequent arrays to have constant items (immutable, `equ`).
-MACRO? use_constant_arrays
-	def _arrays_are_constant = 1
-ENDM
-
 ; Set subsequent arrays to have variable items (mutable, `=`).
 MACRO? use_variable_arrays
 	def _arrays_are_constant = 0
+ENDM
+
+; Set subsequent arrays to have constant items (immutable, `equ`).
+MACRO? use_constant_arrays
+	def _arrays_are_constant = 1
 ENDM
 
 ; Causes assembly to fail if the specified value is negative.
@@ -307,12 +307,15 @@ MACRO? array_dl ; <name>
 ENDM
 
 ; Purges an array and all its items.
-MACRO? array_purge ; <name>
-	__check_array_defined \1, array_purge
-	for? __idx, \1#base, \1#base + \1#len
-		purge \1{__idx}
+MACRO? array_purge ; <...names>
+	for? __arr, 1, _NARG + 1
+		__check_array_defined \<__arr>, array_purge
+		for? __idx, \<__arr>#base, \<__arr>#base + \<__arr>#len
+			purge \<__arr>{__idx}
+		endr
+		purge \<__arr>#base, \<__arr>#len, \<__arr>#equ, __idx
 	endr
-	purge \1#base, \1#len, \1#equ, __idx
+	purge __arr
 ENDM
 
 ; Removes all items from an array, resetting its length to 0.
